@@ -35,6 +35,93 @@ body {
 .tab-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}
+
+/* Micro-animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGlowRed {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes pulseGlowAmber {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes pulseGlowViolet {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pop-in {
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pulse-glow-red {
+  animation: pulseGlowRed 2s infinite;
+}
+
+.pulse-glow-amber {
+  animation: pulseGlowAmber 2s infinite;
+}
+
+.pulse-glow-violet {
+  animation: pulseGlowViolet 2s infinite;
 }
 
 /* Jargon tooltip */
@@ -44,10 +131,13 @@ body {
 .jargon-tooltip {
   visibility: hidden;
   opacity: 0;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate(-50%, 4px);
 }
 .jargon-pill:hover .jargon-tooltip,
-.jargon-pill:focus .jargon-tooltip {
+.jargon-pill:focus .jargon-tooltip,
+.jargon-pill:focus-visible .jargon-tooltip {
   visibility: visible;
   opacity: 1;
+  transform: translate(-50%, 0);
 }

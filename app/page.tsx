@@ -324,8 +324,8 @@ function SettingsModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#0f1629] border border-slate-700/60 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in-up">
+      <div className="bg-[#0f1629] border border-slate-700/60 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-violet-500/20 flex items-center justify-center">
@@ -336,7 +336,8 @@ function SettingsModal({
           <button
             id="settings-close-btn"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-all"
+            aria-label="Close settings"
           >
             <X className="w-5 h-5" />
           </button>
@@ -353,7 +354,7 @@ function SettingsModal({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full bg-slate-800/60 border border-slate-600/60 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/70 transition-colors"
+              className="w-full bg-slate-800/60 border border-slate-600/60 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/70 focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-colors"
             />
             <p className="mt-2 text-xs text-slate-500">
               Optional — without a key, Harmonic uses local extraction as fallback.
@@ -372,7 +373,7 @@ function SettingsModal({
           <button
             id="settings-cancel-btn"
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 transition-all text-sm"
+            className="flex-1 py-3 rounded-xl border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-all text-sm font-medium"
           >
             Cancel
           </button>
@@ -382,7 +383,7 @@ function SettingsModal({
               onSave(draft);
               onClose();
             }}
-            className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium transition-all text-sm"
+            className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] text-white font-medium transition-all text-sm shadow-lg shadow-violet-600/30"
           >
             Save Key
           </button>
@@ -410,31 +411,32 @@ function CatchMeUpDrawer({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#0f1629] border border-slate-700/60 rounded-2xl w-full max-w-lg max-h-[80vh] shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in-up">
+      <div className="bg-[#0f1629] border border-slate-700/60 rounded-2xl w-full max-w-lg max-h-[85vh] shadow-2xl flex flex-col overflow-hidden">
         {/* Gradient accent bar */}
         <div className="h-1 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-pink-500" />
 
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/40">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-700/40">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-violet-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Catch Me Up</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-white">Catch Me Up</h2>
               <p className="text-xs text-slate-500">Executive timeline & key takeaways</p>
             </div>
           </div>
           <button
             id="catchup-close-btn"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-all"
+            aria-label="Close Catch Me Up drawer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar space-y-6">
           {/* Executive Recaps Timeline */}
           {recaps.length > 0 && (
             <div>
@@ -443,16 +445,16 @@ function CatchMeUpDrawer({
               </p>
               <div className="space-y-3">
                 {recaps.map((recap, i) => (
-                  <div key={i} className="flex gap-3 items-start">
+                  <div key={i} className="flex gap-3 items-start animate-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
                     <div className="flex flex-col items-center mt-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-violet-500 ring-4 ring-violet-500/20" />
                       {i < recaps.length - 1 && (
-                        <div className="w-px flex-1 bg-slate-700/60 mt-1" />
+                        <div className="w-px flex-1 bg-slate-700/60 mt-1 min-h-[24px]" />
                       )}
                     </div>
-                    <div className="flex-1 p-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
-                      <p className="text-sm text-slate-300 leading-relaxed">{recap}</p>
-                      <span className="text-xs text-slate-600 mt-1 block">Segment {i + 1}</span>
+                    <div className="flex-1 p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
+                      <p className="text-sm text-slate-200 leading-relaxed">{recap}</p>
+                      <span className="text-xs text-slate-500 mt-1.5 block">Segment {i + 1}</span>
                     </div>
                   </div>
                 ))}
@@ -470,10 +472,11 @@ function CatchMeUpDrawer({
                 {notes.slice(-8).map((note, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-sm text-indigo-200"
+                    className="flex items-start gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-sm text-indigo-200 animate-fade-in-up"
+                    style={{ animationDelay: `${i * 30}ms` }}
                   >
                     <ChevronDown className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5 rotate-[-90deg]" />
-                    {note}
+                    <span>{note}</span>
                   </li>
                 ))}
               </ul>
@@ -503,6 +506,9 @@ function Card({
   children,
   badge,
   id,
+  className = "",
+  glow = false,
+  glowColor = "violet",
 }: {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -510,24 +516,35 @@ function Card({
   children: React.ReactNode;
   badge?: React.ReactNode;
   id?: string;
+  className?: string;
+  glow?: boolean;
+  glowColor?: "violet" | "red" | "amber";
 }) {
+  const glowStyles = {
+    red: "border-red-500/50 shadow-[0_0_28px_rgba(239,68,68,0.22)] ring-1 ring-red-500/40",
+    amber: "border-amber-500/50 shadow-[0_0_28px_rgba(245,158,11,0.22)] ring-1 ring-amber-500/40",
+    violet: "border-violet-500/50 shadow-[0_0_28px_rgba(139,92,246,0.22)] ring-1 ring-violet-500/40",
+  };
+
   return (
     <div
       id={id}
-      className="bg-[#0d1526]/80 backdrop-blur-sm border border-slate-700/40 rounded-2xl flex flex-col overflow-hidden shadow-xl"
+      className={`bg-[#0d1526]/85 backdrop-blur-md rounded-2xl flex flex-col overflow-hidden shadow-xl transition-all duration-300 border ${
+        glow ? glowStyles[glowColor] : "border-slate-700/40 hover:border-slate-600/60"
+      } ${className}`}
     >
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-700/40">
+      <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-700/40">
         <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconColor}`}
+          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${iconColor}`}
         >
           <Icon className="w-4 h-4" />
         </div>
-        <span className="text-sm font-semibold text-slate-200 tracking-wide">
+        <span className="text-sm font-semibold text-slate-200 tracking-wide truncate">
           {title}
         </span>
-        {badge && <div className="ml-auto">{badge}</div>}
+        {badge && <div className="ml-auto shrink-0">{badge}</div>}
       </div>
-      <div className="flex-1 overflow-hidden p-5">{children}</div>
+      <div className="flex-1 overflow-hidden p-4 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -841,25 +858,39 @@ export default function HarmonicDashboard() {
       title="Live Audio & Diarization"
       icon={Radio}
       iconColor="bg-violet-500/20 text-violet-400"
+      glow={waveActive || isListening || isSimulating}
+      glowColor={isListening ? "red" : isSimulating ? "amber" : "violet"}
       badge={
         <span
-          className={`text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 ${
-            waveActive
-              ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-              : "bg-slate-700/60 text-slate-400"
+          className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 transition-colors ${
+            isListening
+              ? "bg-red-500/20 text-red-300 border border-red-500/40"
+              : isSimulating
+              ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+              : waveActive
+              ? "bg-violet-500/20 text-violet-300 border border-violet-500/40"
+              : "bg-slate-700/60 text-slate-400 border border-slate-600/30"
           }`}
         >
           <span
-            className={`w-1.5 h-1.5 rounded-full ${waveActive ? "bg-violet-400 animate-pulse" : "bg-slate-500"}`}
+            className={`w-1.5 h-1.5 rounded-full ${
+              isListening
+                ? "bg-red-400 animate-ping"
+                : isSimulating
+                ? "bg-amber-400 animate-pulse"
+                : waveActive
+                ? "bg-violet-400 animate-pulse"
+                : "bg-slate-500"
+            }`}
           />
-          {waveActive ? "LIVE" : "IDLE"}
+          {isListening ? "MIC REC" : isSimulating ? "SIMULATION" : waveActive ? "LIVE" : "IDLE"}
         </span>
       }
     >
       <div className="mb-4">
         <LiveWaveformCanvas active={waveActive} />
       </div>
-      <div className="space-y-2 h-48 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-2.5 h-56 sm:h-64 md:h-72 overflow-y-auto pr-1.5 custom-scrollbar">
         {transcript.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm gap-2">
             <Mic className="w-8 h-8 opacity-30" />
@@ -869,23 +900,23 @@ export default function HarmonicDashboard() {
         {transcript.map((line) => (
           <div
             key={line.id}
-            className="flex gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-700/30 hover:border-slate-600/50 transition-all group"
+            className="flex gap-3 p-3 sm:p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/30 hover:border-slate-600/50 transition-all group animate-fade-in-up"
           >
             <div className="shrink-0 mt-0.5">
-              <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-slate-700/80 flex items-center justify-center border border-slate-600/40">
                 <User className="w-3.5 h-3.5 text-slate-400" />
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className={`text-xs font-semibold ${speakerColor(line.speaker)}`}>
                   {line.speaker}
                 </span>
                 <span className="text-xs text-slate-600">·</span>
-                <span className="text-xs text-slate-500">{line.role}</span>
-                <span className="ml-auto text-xs text-slate-600">{line.timestamp}</span>
+                <span className="text-xs text-slate-400">{line.role}</span>
+                <span className="ml-auto text-xs text-slate-500">{line.timestamp}</span>
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed">
+              <p className="text-sm text-slate-200 leading-relaxed">
                 {bionicMode ? <BionicText text={line.text} /> : line.text}
               </p>
             </div>
@@ -894,7 +925,7 @@ export default function HarmonicDashboard() {
         <div ref={transcriptEndRef} />
       </div>
       {isProcessing && (
-        <div className="mt-3 flex items-center gap-2 text-xs text-violet-400">
+        <div className="mt-3 flex items-center gap-2 text-xs text-violet-400 animate-pulse">
           <div className="w-3 h-3 rounded-full border-2 border-violet-400 border-t-transparent animate-spin" />
           Processing with Harmonic AI…
         </div>
@@ -909,12 +940,12 @@ export default function HarmonicDashboard() {
       icon={Brain}
       iconColor="bg-amber-500/20 text-amber-400"
       badge={
-        <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+        <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
           {actions.filter((a) => !a.done).length} open
         </span>
       }
     >
-      <div className="space-y-2 h-[19rem] overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-2.5 h-64 sm:h-72 md:h-80 overflow-y-auto pr-1.5 custom-scrollbar">
         {actions.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm gap-2">
             <CheckCircle2 className="w-8 h-8 opacity-30" />
@@ -924,10 +955,19 @@ export default function HarmonicDashboard() {
         {actions.map((action) => (
           <div
             key={action.id}
-            className={`p-4 rounded-xl border transition-all cursor-pointer select-none ${
+            tabIndex={0}
+            role="button"
+            aria-pressed={action.done}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleAction(action.id);
+              }
+            }}
+            className={`p-4 rounded-xl border transition-all cursor-pointer select-none animate-fade-in-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] hover:-translate-y-0.5 ${
               action.done
-                ? "bg-slate-800/20 border-slate-700/20 opacity-50"
-                : "bg-slate-800/50 border-slate-700/40 hover:border-slate-600/60"
+                ? "bg-slate-800/20 border-slate-700/20 opacity-50 hover:opacity-75"
+                : "bg-slate-800/50 border-slate-700/40 hover:border-slate-600/60 hover:shadow-lg shadow-black/20"
             }`}
             onClick={() => toggleAction(action.id)}
             id={`action-item-${action.id}`}
@@ -943,7 +983,7 @@ export default function HarmonicDashboard() {
               <div className="flex-1 min-w-0">
                 <p
                   className={`text-sm leading-snug mb-2 ${
-                    action.done ? "line-through text-slate-500" : "text-slate-200"
+                    action.done ? "line-through text-slate-500" : "text-slate-200 font-medium"
                   }`}
                 >
                   {bionicMode && !action.done ? <BionicText text={action.task} /> : action.task}
@@ -958,7 +998,7 @@ export default function HarmonicDashboard() {
                   >
                     {action.priority}
                   </span>
-                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <span className="text-xs text-slate-400 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {action.due}
                   </span>
@@ -978,12 +1018,12 @@ export default function HarmonicDashboard() {
       icon={Languages}
       iconColor="bg-pink-500/20 text-pink-400"
       badge={
-        <span className="text-xs px-2 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 font-medium">
+        <span className="text-xs px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 font-medium">
           हिन्दी
         </span>
       }
     >
-      <div className="h-[19rem] overflow-y-auto pr-1 custom-scrollbar space-y-3">
+      <div className="h-64 sm:h-72 md:h-80 overflow-y-auto pr-1.5 custom-scrollbar space-y-3">
         {hindiLines.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm gap-2">
             <Languages className="w-8 h-8 opacity-30" />
@@ -993,7 +1033,7 @@ export default function HarmonicDashboard() {
         {hindiLines.map((line, i) => (
           <div
             key={i}
-            className="p-4 rounded-xl bg-[#1a0f2e]/60 border border-pink-500/20 hover:border-pink-500/40 transition-all"
+            className="p-4 rounded-xl bg-[#1a0f2e]/60 border border-pink-500/20 hover:border-pink-500/40 transition-all animate-fade-in-up"
           >
             <p className="text-base leading-loose text-pink-100 font-medium"
                style={{ fontFamily: "'Noto Sans Devanagari', 'Mangal', serif", fontSize: "1.05rem" }}>
@@ -1004,7 +1044,7 @@ export default function HarmonicDashboard() {
 
         {/* Dynamic Technical Glossary */}
         {jargon.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-pink-500/20">
+          <div className="mt-4 pt-4 border-t border-pink-500/20 animate-fade-in-up">
             <div className="flex items-center gap-2 mb-3">
               <BookOpen className="w-3.5 h-3.5 text-pink-400/70" />
               <p className="text-xs font-semibold text-pink-400/70 uppercase tracking-widest">
@@ -1015,11 +1055,11 @@ export default function HarmonicDashboard() {
               {jargon.map((j, i) => (
                 <span
                   key={i}
-                  className="jargon-pill relative cursor-help px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-xs font-medium text-pink-300 hover:bg-pink-500/25 hover:border-pink-500/50 transition-all"
+                  className="jargon-pill relative cursor-help px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-xs font-medium text-pink-300 hover:bg-pink-500/25 hover:border-pink-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0d1526] transition-all animate-pop-in"
                   tabIndex={0}
                 >
                   {j.term}
-                  <span className="jargon-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 rounded-xl bg-[#0d1526] border border-slate-600/60 shadow-xl text-xs text-slate-300 leading-relaxed font-normal pointer-events-none z-30">
+                  <span className="jargon-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-3 rounded-xl bg-[#0d1526] border border-slate-600/60 shadow-2xl text-xs text-slate-300 leading-relaxed font-normal pointer-events-none z-30">
                     <span className="font-semibold text-pink-300 block mb-1">{j.term}</span>
                     {j.definition}
                     <span className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[#0d1526] border-r border-b border-slate-600/60 -mt-1" />
@@ -1047,19 +1087,19 @@ export default function HarmonicDashboard() {
       icon={Volume2}
       iconColor="bg-emerald-500/20 text-emerald-400"
       badge={
-        <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+        <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
           Sam
         </span>
       }
     >
-      <div className="space-y-4 h-[19rem] flex flex-col">
+      <div className="space-y-4 h-64 sm:h-72 md:h-80 flex flex-col">
         <div className="grid grid-cols-2 gap-2">
           {AAC_QUICK_PHRASES.map((phrase) => (
             <button
               key={phrase}
               id={`aac-phrase-${phrase.replace(/\s+/g, "-").toLowerCase()}`}
               onClick={() => speakAAC(phrase)}
-              className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-500/40 text-emerald-300 text-sm font-medium transition-all text-left leading-tight active:scale-95"
+              className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] text-emerald-300 text-sm font-medium transition-all text-left leading-tight active:scale-95"
             >
               {phrase}
             </button>
@@ -1078,14 +1118,14 @@ export default function HarmonicDashboard() {
               }
             }}
             placeholder="Type a custom message…"
-            className="flex-1 w-full bg-slate-800/60 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm resize-none focus:outline-none focus:border-emerald-500/50 transition-colors"
+            className="flex-1 w-full bg-slate-800/60 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm resize-none focus:outline-none focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] transition-colors"
             rows={3}
           />
           <button
             id="aac-speak-btn"
             onClick={handleAacSubmit}
             disabled={!aacInput.trim()}
-            className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium text-sm flex items-center justify-center gap-2 transition-all"
+            className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] text-white font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
           >
             <Volume2 className="w-4 h-4" />
             Speak into Meeting
@@ -1161,18 +1201,6 @@ export default function HarmonicDashboard() {
 
   return (
     <>
-      {/* Global styles injected via next/head alternative – inline for client component */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.6); }
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.4); }
-          50% { box-shadow: 0 0 0 8px rgba(139,92,246,0); }
-        }
-        .pulse-glow { animation: pulse-glow 2s infinite; }
-      `}</style>
 
       <SettingsModal
         open={showSettings}
@@ -1197,18 +1225,18 @@ export default function HarmonicDashboard() {
         </div>
 
         {/* ── Header ── */}
-        <header className="relative z-10 border-b border-slate-700/40 bg-[#060d1f]/80 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center gap-4">
+        <header className="relative z-10 border-b border-slate-700/40 bg-[#060d1f]/85 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 sm:py-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
             {/* Brand */}
-            <div className="flex items-center gap-3 mr-4">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+            <div className="flex items-center gap-3 mr-2">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25 shrink-0">
                 <Accessibility className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-base font-bold text-white tracking-tight leading-none">
                   Harmonic
                 </h1>
-                <p className="text-xs text-slate-500 leading-none mt-0.5">
+                <p className="text-xs text-slate-400 leading-none mt-1">
                   Adaptive Semantic Middleware
                 </p>
               </div>
@@ -1216,43 +1244,47 @@ export default function HarmonicDashboard() {
 
             {/* Live pill */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs text-red-300 font-medium">
-                Sprint Planning Call (Live — Ephemeral Audio)
+              <span className={`w-2 h-2 rounded-full ${isListening ? "bg-red-400 animate-ping" : "bg-red-500 animate-pulse"}`} />
+              <span className="text-xs text-red-300 font-medium hidden xs:inline sm:inline">
+                Sprint Planning Call (Live — Ephemeral)
+              </span>
+              <span className="text-xs text-red-300 font-medium xs:hidden sm:hidden">
+                Live
               </span>
             </div>
 
             {/* Network indicator */}
-            <div className="ml-auto flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               {networkOk ? (
                 <Wifi className="w-4 h-4 text-emerald-400" />
               ) : (
                 <WifiOff className="w-4 h-4 text-amber-400" />
               )}
-              <span className="text-xs text-slate-500 hidden sm:inline">
-                {networkOk ? "Online" : "Offline — local fallback active"}
+              <span className="text-xs text-slate-400">
+                {networkOk ? "Online" : "Offline fallback"}
               </span>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Mic button */}
               <button
                 id="mic-toggle-btn"
                 onClick={toggleMic}
                 disabled={isSimulating}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] ${
                   isListening
-                    ? "bg-red-500/20 border border-red-500/50 text-red-300 pulse-glow"
-                    : "bg-violet-600 hover:bg-violet-500 text-white border border-violet-500/50"
-                } disabled:opacity-40 disabled:cursor-not-allowed`}
+                    ? "bg-red-500/20 border border-red-500/60 text-red-300 pulse-glow-red"
+                    : "bg-violet-600 hover:bg-violet-500 text-white border border-violet-500/50 shadow-lg shadow-violet-600/25"
+                } disabled:opacity-40 disabled:cursor-not-allowed active:scale-95`}
+                aria-label={isListening ? "Stop microphone" : "Start microphone"}
               >
                 {isListening ? (
                   <MicOff className="w-4 h-4" />
                 ) : (
                   <Mic className="w-4 h-4" />
                 )}
-                {isListening ? "Stop Mic" : "Start Mic"}
+                <span>{isListening ? "Stop Mic" : "Start Mic"}</span>
               </button>
 
               {/* Simulation button */}
@@ -1260,14 +1292,16 @@ export default function HarmonicDashboard() {
                 id="simulation-btn"
                 onClick={runSimulation}
                 disabled={isSimulating || isListening}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all border ${
+                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] ${
                   isSimulating
-                    ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300 pulse-glow-amber"
                     : "bg-slate-800/80 border-slate-600/50 text-slate-300 hover:bg-slate-700/80 hover:text-white"
-                } disabled:opacity-40 disabled:cursor-not-allowed`}
+                } disabled:opacity-40 disabled:cursor-not-allowed active:scale-95`}
+                aria-label="Run 30 second simulation"
               >
                 <Zap className={`w-4 h-4 ${isSimulating ? "animate-pulse" : ""}`} />
-                {isSimulating ? "Simulating…" : "Run 30s Simulation"}
+                <span className="hidden sm:inline">{isSimulating ? "Simulating…" : "Run 30s Simulation"}</span>
+                <span className="sm:hidden">{isSimulating ? "Simulating…" : "Simulate"}</span>
               </button>
 
               {/* Catch Me Up */}
@@ -1275,9 +1309,10 @@ export default function HarmonicDashboard() {
                 id="catch-me-up-btn"
                 onClick={() => setShowCatchUp(true)}
                 disabled={recaps.length === 0 && notes.length === 0}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all border bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all border bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                aria-label="Open Catch Me Up drawer"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-indigo-400" />
                 <span className="hidden sm:inline">Catch Me Up</span>
               </button>
 
@@ -1285,21 +1320,23 @@ export default function HarmonicDashboard() {
               <button
                 id="bionic-reading-btn"
                 onClick={() => setBionicMode((v) => !v)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all border ${
+                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] active:scale-95 ${
                   bionicMode
-                    ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300"
+                    ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300 ring-1 ring-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                     : "bg-slate-800/80 border-slate-600/50 text-slate-300 hover:bg-slate-700/80 hover:text-white"
                 }`}
+                aria-label="Toggle bionic reading mode"
               >
-                {bionicMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span className="hidden sm:inline">{bionicMode ? "Bionic Off" : "Bionic"}</span>
+                {bionicMode ? <EyeOff className="w-4 h-4 text-cyan-400" /> : <Eye className="w-4 h-4" />}
+                <span className="hidden sm:inline">{bionicMode ? "Bionic On" : "Bionic"}</span>
               </button>
 
               {/* Settings */}
               <button
                 id="settings-btn"
                 onClick={() => setShowSettings(true)}
-                className="p-2 rounded-xl border border-slate-600/50 text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
+                className="p-2.5 rounded-xl border border-slate-600/50 text-slate-400 hover:text-white hover:bg-slate-700/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] transition-all active:scale-95"
+                aria-label="Open settings"
               >
                 <Settings className="w-4 h-4" />
               </button>
@@ -1307,22 +1344,22 @@ export default function HarmonicDashboard() {
           </div>
 
           {/* ── Tab bar ── */}
-          <div className="max-w-7xl mx-auto px-6 pb-0 flex gap-1 overflow-x-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-0 flex gap-1 overflow-x-auto tab-scroll">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 id={`tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#060d1f] rounded-t-lg ${
                   activeTab === tab.id
-                    ? "border-violet-500 text-violet-300"
-                    : "border-transparent text-slate-500 hover:text-slate-300"
+                    ? "border-violet-500 text-violet-300 bg-violet-500/5"
+                    : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/30"
                 }`}
               >
                 <span>{tab.emoji}</span>
                 <span>{tab.label}</span>
                 {tab.sub && (
-                  <span className="text-xs text-slate-600 hidden md:inline">
+                  <span className="text-xs text-slate-500 hidden md:inline">
                     · {tab.sub}
                   </span>
                 )}
@@ -1332,18 +1369,20 @@ export default function HarmonicDashboard() {
         </header>
 
         {/* ── Main content ── */}
-        <main className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* Simplified notes banner */}
           {notes.length > 0 && (
-            <div className="mb-6 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-start gap-3">
-              <ChevronDown className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5 rotate-[-90deg]" />
-              <div>
+            <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-start gap-3.5 animate-fade-in-up shadow-lg shadow-indigo-950/20">
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <ChevronDown className="w-4 h-4 text-indigo-400 rotate-[-90deg]" />
+              </div>
+              <div className="flex-1">
                 <p className="text-xs font-semibold text-indigo-400 mb-2 uppercase tracking-widest">
                   Simplified Notes
                 </p>
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {notes.slice(-6).map((note, i) => (
-                    <li key={i} className="text-sm text-indigo-200">
+                    <li key={i} className="text-sm text-indigo-200 leading-relaxed">
                       {note}
                     </li>
                   ))}
