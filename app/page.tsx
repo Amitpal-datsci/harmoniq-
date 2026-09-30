@@ -41,16 +41,17 @@ import {
   User,
   Clock,
   AlertTriangle,
-  ChevronDown,
-  Send,
-  KeyRound,
-  Wifi,
-  WifiOff,
-  Accessibility,
+  ChevronRight,
   Eye,
   EyeOff,
   Sparkles,
   BookOpen,
+  Wifi,
+  WifiOff,
+  Terminal,
+  Cpu,
+  Layers,
+  Check,
 } from "lucide-react";
 
 // ────────────────────────────────────────────────────────────
@@ -89,7 +90,7 @@ interface HarmonizeData {
 }
 
 // ────────────────────────────────────────────────────────────
-//  Simulation data (deterministic, no network required)
+//  Deterministic Simulation Dataset
 // ────────────────────────────────────────────────────────────
 
 const SIMULATION_EVENTS = [
@@ -109,11 +110,11 @@ const SIMULATION_EVENTS = [
     ],
     notes: [
       "Backend API release rescheduled to Monday 10 AM",
-      "Team alignment required before the deadline",
+      "Team alignment required before the deployment window",
     ],
     jargon: [
-      { term: "API", definition: "Application Programming Interface — a contract for software communication." },
-      { term: "BACKEND", definition: "The server-side layer handling business logic and data." },
+      { term: "API", definition: "Application Programming Interface — standard communication contract." },
+      { term: "BACKEND", definition: "Server-side architecture handling database queries & business logic." },
     ],
     recap: "The backend API deployment was rescheduled to Monday 10:00 AM to give the team sufficient runway.",
   },
@@ -136,8 +137,8 @@ const SIMULATION_EVENTS = [
       "Database indexing verification is mandatory",
     ],
     jargon: [
-      { term: "LOAD TEST", definition: "Simulating high traffic to validate system performance under stress." },
-      { term: "INDEXING", definition: "Creating data structures to speed up database queries." },
+      { term: "LOAD TEST", definition: "Simulating high concurrent traffic to evaluate performance bottlenecks." },
+      { term: "INDEXING", definition: "Data structures optimizing lookup efficiency on relational tables." },
     ],
     recap: "Rahul was assigned to run load tests and verify DB indexing by Sunday 6 PM before release.",
   },
@@ -150,18 +151,18 @@ const SIMULATION_EVENTS = [
     actions: [],
     notes: [
       "DB migration scripts confirmed ready",
-      "Sam has validated all migration steps",
+      "Sam has validated all migration steps in staging",
     ],
     jargon: [
-      { term: "MIGRATION", definition: "A versioned change to a database schema." },
-      { term: "DB", definition: "Database — structured storage for persistent data." },
+      { term: "MIGRATION", definition: "Version-controlled DDL script transforming schema structure." },
+      { term: "DB", definition: "Database persistence layer storing structured application state." },
     ],
     recap: "Sam confirmed that all database migration scripts have been validated and are ready.",
   },
 ];
 
 // ────────────────────────────────────────────────────────────
-//  Utilities
+//  Design System Tokens & Utilities
 // ────────────────────────────────────────────────────────────
 
 function uid() {
@@ -173,27 +174,28 @@ function now() {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
+    hour12: false,
   });
 }
 
-const PRIORITY_STYLES: Record<string, string> = {
-  High: "bg-red-500/20 text-red-300 border border-red-500/40",
-  Medium: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
-  Low: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+const PRIORITY_TAGS: Record<string, string> = {
+  High: "border-red-800/80 bg-red-950/50 text-red-300",
+  Medium: "border-amber-800/80 bg-amber-950/50 text-amber-300",
+  Low: "border-emerald-800/80 bg-emerald-950/50 text-emerald-300",
 };
 
-const SPEAKER_COLORS: Record<string, string> = {
-  Ananya: "text-violet-400",
-  Rahul: "text-sky-400",
-  Sam: "text-emerald-400",
-  "Sam (AAC)": "text-emerald-400",
-  Priya: "text-pink-400",
-  Alex: "text-amber-400",
-  You: "text-cyan-400",
+const SPEAKER_STYLES: Record<string, { tag: string; border: string }> = {
+  Ananya: { tag: "text-purple-300 bg-purple-950/40 border-purple-800/70", border: "border-purple-900/40" },
+  Rahul: { tag: "text-cyan-300 bg-cyan-950/40 border-cyan-800/70", border: "border-cyan-900/40" },
+  Sam: { tag: "text-emerald-300 bg-emerald-950/40 border-emerald-800/70", border: "border-emerald-900/40" },
+  "Sam (AAC)": { tag: "text-emerald-300 bg-emerald-950/40 border-emerald-800/70", border: "border-emerald-900/40" },
+  Priya: { tag: "text-rose-300 bg-rose-950/40 border-rose-800/70", border: "border-rose-900/40" },
+  Alex: { tag: "text-amber-300 bg-amber-950/40 border-amber-800/70", border: "border-amber-900/40" },
+  You: { tag: "text-sky-300 bg-sky-950/40 border-sky-800/70", border: "border-sky-900/40" },
 };
 
-function speakerColor(name: string): string {
-  return SPEAKER_COLORS[name] ?? "text-slate-300";
+function getSpeakerStyle(name: string) {
+  return SPEAKER_STYLES[name] ?? { tag: "text-zinc-300 bg-zinc-800/60 border-zinc-700", border: "border-zinc-800" };
 }
 
 function BionicText({ text }: { text: string }) {
@@ -204,8 +206,8 @@ function BionicText({ text }: { text: string }) {
         const mid = Math.ceil(segment.length / 2);
         return (
           <span key={i}>
-            <b className="font-semibold text-white">{segment.slice(0, mid)}</b>
-            <span className="font-normal">{segment.slice(mid)}</span>
+            <b className="font-semibold text-zinc-100">{segment.slice(0, mid)}</b>
+            <span className="font-normal text-zinc-300">{segment.slice(mid)}</span>
           </span>
         );
       })}
@@ -214,34 +216,10 @@ function BionicText({ text }: { text: string }) {
 }
 
 // ────────────────────────────────────────────────────────────
-//  Sub-components
+//  Tactile Instrument VU Meter
 // ────────────────────────────────────────────────────────────
 
-function AudioWaveform({ active }: { active: boolean }) {
-  const bars = Array.from({ length: 28 }, (_, i) => i);
-  return (
-    <div className="flex items-center gap-[3px] h-10">
-      {bars.map((i) => (
-        <div
-          key={i}
-          className={`rounded-full transition-all ${
-            active ? "bg-violet-500" : "bg-slate-600"
-          }`}
-          style={{
-            width: 3,
-            height: active
-              ? `${10 + Math.sin(Date.now() / 200 + i * 0.7) * 20 + Math.random() * 12}px`
-              : "6px",
-            transition: active ? "height 0.12s ease" : "height 0.4s ease",
-            animationDelay: `${i * 40}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function LiveWaveformCanvas({ active }: { active: boolean }) {
+function HardwareVuMeter({ active }: { active: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const frameRef = useRef(0);
@@ -254,37 +232,47 @@ function LiveWaveformCanvas({ active }: { active: boolean }) {
 
     const W = canvas.width;
     const H = canvas.height;
-    const bars = 36;
+    const bars = 32;
     const barW = Math.floor(W / bars) - 2;
 
     function draw() {
       if (!ctx) return;
       frameRef.current++;
-      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#09090b";
+      ctx.fillRect(0, 0, W, H);
+
+      // Draw subtle grid lines
+      ctx.strokeStyle = "#27272a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.25);
+      ctx.lineTo(W, H * 0.25);
+      ctx.moveTo(0, H * 0.5);
+      ctx.lineTo(W, H * 0.5);
+      ctx.moveTo(0, H * 0.75);
+      ctx.lineTo(W, H * 0.75);
+      ctx.stroke();
 
       for (let i = 0; i < bars; i++) {
-        const t = frameRef.current / 8 + i * 0.4;
+        const t = frameRef.current / 8 + i * 0.35;
         const amp = active
-          ? 0.3 + 0.7 * Math.abs(Math.sin(t) * Math.cos(t * 0.7 + i * 0.3))
-          : 0.07 + 0.03 * Math.sin(t);
+          ? 0.25 + 0.75 * Math.abs(Math.sin(t) * Math.cos(t * 0.8 + i * 0.25))
+          : 0.08 + 0.04 * Math.sin(t);
         const h = amp * H;
         const x = i * (barW + 2);
-        const y = (H - h) / 2;
+        const y = H - h;
 
-        const grad = ctx.createLinearGradient(0, y, 0, y + h);
-        if (active) {
-          grad.addColorStop(0, "rgba(139,92,246,0.9)");
-          grad.addColorStop(0.5, "rgba(99,102,241,1)");
-          grad.addColorStop(1, "rgba(139,92,246,0.9)");
+        // Distinct discrete segmented meter: Emerald -> Amber -> Red peak
+        const ratio = amp;
+        if (ratio > 0.85) {
+          ctx.fillStyle = "#ef4444"; // Red (Peak/Clip)
+        } else if (ratio > 0.6) {
+          ctx.fillStyle = "#f59e0b"; // Amber (Warning)
         } else {
-          grad.addColorStop(0, "rgba(71,85,105,0.5)");
-          grad.addColorStop(1, "rgba(51,65,85,0.5)");
+          ctx.fillStyle = active ? "#10b981" : "#3f3f46"; // Emerald (Normal signal)
         }
 
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.roundRect(x, y, barW, h, 2);
-        ctx.fill();
+        ctx.fillRect(x, y, barW, h);
       }
 
       animRef.current = requestAnimationFrame(draw);
@@ -295,17 +283,68 @@ function LiveWaveformCanvas({ active }: { active: boolean }) {
   }, [active]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={280}
-      height={56}
-      className="w-full h-14 rounded-lg"
-    />
+    <div className="border border-zinc-800 bg-zinc-950 p-2 rounded">
+      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mb-1 px-1">
+        <span>AUDIO SPECTRUM // 48kHz</span>
+        <span className={active ? "text-emerald-400 font-bold" : "text-zinc-600"}>
+          {active ? "SIGNAL: -3.2 dB" : "SIGNAL: NOISE_FLOOR"}
+        </span>
+      </div>
+      <canvas
+        ref={canvasRef}
+        width={380}
+        height={46}
+        className="w-full h-11 block rounded-none"
+      />
+      <div className="flex justify-between text-[9px] font-mono text-zinc-600 mt-1 px-1">
+        <span>-48dB</span>
+        <span>-24dB</span>
+        <span>-12dB</span>
+        <span>-6dB</span>
+        <span className="text-red-500/80">0dB [CLIP]</span>
+      </div>
+    </div>
   );
 }
 
 // ────────────────────────────────────────────────────────────
-//  Settings Modal
+//  Workstation Chassis Panel (Card)
+// ────────────────────────────────────────────────────────────
+
+function InstrumentPanel({
+  title,
+  icon: Icon,
+  children,
+  badge,
+  id,
+  className = "",
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  badge?: React.ReactNode;
+  id?: string;
+  className?: string;
+}) {
+  return (
+    <section
+      id={id}
+      className={`bg-zinc-900/60 border border-zinc-800 rounded-lg flex flex-col overflow-hidden ${className}`}
+    >
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-zinc-800 bg-zinc-900/90 text-xs font-mono uppercase tracking-wider text-zinc-300">
+        <div className="flex items-center gap-2">
+          <Icon className="w-3.5 h-3.5 text-zinc-400" />
+          <span className="font-semibold text-zinc-200">{title}</span>
+        </div>
+        {badge && <div className="shrink-0">{badge}</div>}
+      </div>
+      <div className="flex-1 overflow-hidden p-3.5 sm:p-4">{children}</div>
+    </section>
+  );
+}
+
+// ────────────────────────────────────────────────────────────
+//  Settings Modal (Workstation Console)
 // ────────────────────────────────────────────────────────────
 
 function SettingsModal({
@@ -324,29 +363,27 @@ function SettingsModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in-up">
-      <div className="bg-[#0f1629] border border-slate-700/60 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <KeyRound className="w-5 h-5 text-violet-400" />
-            </div>
-            <h2 className="text-lg font-semibold text-white">Harmonic Settings</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in-up">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 sm:p-6 w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-800">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-zinc-300">
+            <Cpu className="w-4 h-4 text-zinc-400" />
+            <h2 className="font-semibold text-zinc-100">Instrument Configuration</h2>
           </div>
           <button
             id="settings-close-btn"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-all"
-            aria-label="Close settings"
+            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 focus-visible:outline-none transition-colors"
+            aria-label="Close configuration"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
-              Gemini API Key
+            <label className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+              Gemini API Secret Key
             </label>
             <input
               id="gemini-api-key-input"
@@ -354,26 +391,26 @@ function SettingsModal({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full bg-slate-800/60 border border-slate-600/60 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/70 focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-colors"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
             />
-            <p className="mt-2 text-xs text-slate-500">
-              Optional — without a key, Harmonic uses local extraction as fallback.
+            <p className="mt-1.5 text-[11px] font-mono text-zinc-500">
+              Heuristic fallback engine activates automatically if omitted or offline.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
-            <Accessibility className="w-4 h-4 text-violet-400 shrink-0" />
-            <p className="text-xs text-violet-300">
-              Keys are stored only in browser session memory and never persisted.
+          <div className="flex items-start gap-2 p-2.5 rounded bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-400">
+            <Terminal className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
+            <p className="text-[11px] leading-relaxed">
+              Zero-persistence mandate: Keys and audio tokens are held strictly in ephemeral RAM.
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3 mt-8">
+        <div className="flex gap-2.5 mt-6 pt-3 border-t border-zinc-800">
           <button
             id="settings-cancel-btn"
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-slate-600/60 text-slate-300 hover:bg-slate-700/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-all text-sm font-medium"
+            className="flex-1 py-2 rounded border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors text-xs font-mono uppercase tracking-wider instrument-btn"
           >
             Cancel
           </button>
@@ -383,9 +420,9 @@ function SettingsModal({
               onSave(draft);
               onClose();
             }}
-            className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] text-white font-medium transition-all text-sm shadow-lg shadow-violet-600/30"
+            className="flex-1 py-2 rounded bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-semibold text-xs uppercase tracking-wider instrument-btn transition-colors"
           >
-            Save Key
+            Apply Key
           </button>
         </div>
       </div>
@@ -394,7 +431,7 @@ function SettingsModal({
 }
 
 // ────────────────────────────────────────────────────────────
-//  Catch Me Up Drawer
+//  Catch Me Up Executive Drawer (Instrument Sheet)
 // ────────────────────────────────────────────────────────────
 
 function CatchMeUpDrawer({
@@ -411,72 +448,65 @@ function CatchMeUpDrawer({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in-up">
-      <div className="bg-[#0f1629] border border-slate-700/60 rounded-2xl w-full max-w-lg max-h-[85vh] shadow-2xl flex flex-col overflow-hidden">
-        {/* Gradient accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-pink-500" />
-
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-700/40">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-violet-400" />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-semibold text-white">Catch Me Up</h2>
-              <p className="text-xs text-slate-500">Executive timeline & key takeaways</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs animate-fade-in-up">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-lg w-full max-w-xl max-h-[85vh] shadow-2xl flex flex-col overflow-hidden">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-950">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-200 font-semibold">
+              Telemetry Summary // Executive Timeline
+            </h2>
           </div>
           <button
             id="catchup-close-btn"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1629] transition-all"
-            aria-label="Close Catch Me Up drawer"
+            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+            aria-label="Close executive drawer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar space-y-6">
-          {/* Executive Recaps Timeline */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 custom-scrollbar space-y-5">
+          {/* Executive Recaps */}
           {recaps.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-4">
-                Executive Recap Timeline
-              </p>
-              <div className="space-y-3">
+              <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                <span>[TIMELINE_LOGS]</span>
+                <span className="text-zinc-600">({recaps.length} segments recorded)</span>
+              </div>
+              <div className="space-y-2">
                 {recaps.map((recap, i) => (
-                  <div key={i} className="flex gap-3 items-start animate-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
-                    <div className="flex flex-col items-center mt-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-violet-500 ring-4 ring-violet-500/20" />
-                      {i < recaps.length - 1 && (
-                        <div className="w-px flex-1 bg-slate-700/60 mt-1 min-h-[24px]" />
-                      )}
+                  <div
+                    key={i}
+                    className="p-3 border border-zinc-800 bg-zinc-950/70 rounded text-xs animate-fade-in-up"
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mb-1">
+                      <span>SEGMENT_{String(i + 1).padStart(2, "0")}</span>
+                      <span>RECORDED</span>
                     </div>
-                    <div className="flex-1 p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
-                      <p className="text-sm text-slate-200 leading-relaxed">{recap}</p>
-                      <span className="text-xs text-slate-500 mt-1.5 block">Segment {i + 1}</span>
-                    </div>
+                    <p className="text-zinc-200 leading-relaxed font-sans">{recap}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Simplified Notes */}
+          {/* Key Takeaways */}
           {notes.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-3">
-                Key Takeaways
-              </p>
-              <ul className="space-y-2">
+              <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2.5">
+                [SYNTHESIZED_TAKEAWAYS]
+              </div>
+              <ul className="space-y-1.5 font-mono text-xs">
                 {notes.slice(-8).map((note, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-sm text-indigo-200 animate-fade-in-up"
-                    style={{ animationDelay: `${i * 30}ms` }}
+                    className="p-2.5 rounded bg-zinc-950/60 border border-zinc-800 text-zinc-300 flex items-start gap-2"
                   >
-                    <ChevronDown className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5 rotate-[-90deg]" />
-                    <span>{note}</span>
+                    <span className="text-amber-400 shrink-0 font-mono">›</span>
+                    <span className="font-sans text-xs text-zinc-200">{note}</span>
                   </li>
                 ))}
               </ul>
@@ -484,9 +514,9 @@ function CatchMeUpDrawer({
           )}
 
           {recaps.length === 0 && notes.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-40 text-slate-500 text-sm gap-2">
-              <Sparkles className="w-8 h-8 opacity-30" />
-              <p>No meeting data yet. Start a session to build the timeline.</p>
+            <div className="flex flex-col items-center justify-center h-44 text-zinc-500 text-xs font-mono gap-2">
+              <Terminal className="w-6 h-6 opacity-40" />
+              <p>NO TELEMETRY ACCUMULATED. ENGAGE AUDIO STREAM TO POPULATE.</p>
             </div>
           )}
         </div>
@@ -496,76 +526,21 @@ function CatchMeUpDrawer({
 }
 
 // ────────────────────────────────────────────────────────────
-//  Card wrapper
-// ────────────────────────────────────────────────────────────
-
-function Card({
-  title,
-  icon: Icon,
-  iconColor,
-  children,
-  badge,
-  id,
-  className = "",
-  glow = false,
-  glowColor = "violet",
-}: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  iconColor: string;
-  children: React.ReactNode;
-  badge?: React.ReactNode;
-  id?: string;
-  className?: string;
-  glow?: boolean;
-  glowColor?: "violet" | "red" | "amber";
-}) {
-  const glowStyles = {
-    red: "border-red-500/50 shadow-[0_0_28px_rgba(239,68,68,0.22)] ring-1 ring-red-500/40",
-    amber: "border-amber-500/50 shadow-[0_0_28px_rgba(245,158,11,0.22)] ring-1 ring-amber-500/40",
-    violet: "border-violet-500/50 shadow-[0_0_28px_rgba(139,92,246,0.22)] ring-1 ring-violet-500/40",
-  };
-
-  return (
-    <div
-      id={id}
-      className={`bg-[#0d1526]/85 backdrop-blur-md rounded-2xl flex flex-col overflow-hidden shadow-xl transition-all duration-300 border ${
-        glow ? glowStyles[glowColor] : "border-slate-700/40 hover:border-slate-600/60"
-      } ${className}`}
-    >
-      <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-700/40">
-        <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${iconColor}`}
-        >
-          <Icon className="w-4 h-4" />
-        </div>
-        <span className="text-sm font-semibold text-slate-200 tracking-wide truncate">
-          {title}
-        </span>
-        {badge && <div className="ml-auto shrink-0">{badge}</div>}
-      </div>
-      <div className="flex-1 overflow-hidden p-4 sm:p-5">{children}</div>
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────
-//  Tab profiles
+//  Profiles / Workstation Modes
 // ────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: "all", label: "All Views (Unified Grid)", emoji: "⊞" },
-  { id: "priya", label: "Priya", sub: "Sensory / High-Contrast Hindi Captions", emoji: "♿" },
-  { id: "alex", label: "Alex", sub: "ADHD / Action Cards", emoji: "🧠" },
-  { id: "sam", label: "Sam", sub: "Non-Speaking / AAC Voice", emoji: "🗣️" },
+  { id: "all", label: "Master Grid", code: "GRID" },
+  { id: "priya", label: "Priya", code: "SENSORY_CAPTIONS" },
+  { id: "alex", label: "Alex", code: "ADHD_ACTIONS" },
+  { id: "sam", label: "Sam", code: "AAC_SYNTHESIZER" },
 ];
 
 // ────────────────────────────────────────────────────────────
-//  Main Dashboard
+//  Main Workstation Dashboard
 // ────────────────────────────────────────────────────────────
 
 export default function HarmonicDashboard() {
-  // State
   const [activeTab, setActiveTab] = useState("all");
   const [isListening, setIsListening] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -584,17 +559,14 @@ export default function HarmonicDashboard() {
   const [bionicMode, setBionicMode] = useState(false);
   const [showCatchUp, setShowCatchUp] = useState(false);
 
-  // Refs
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const simTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Scroll transcript to bottom
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [transcript]);
 
-  // Network detection
   useEffect(() => {
     if (typeof window === "undefined") return;
     const update = () => setNetworkOk(navigator.onLine);
@@ -607,10 +579,9 @@ export default function HarmonicDashboard() {
     };
   }, []);
 
-  // ── API Call ──────────────────────────────────────────────
+  // ── Dispatch Text to API ──────────────────────────────────
   const processText = useCallback(
     async (rawText: string, speaker: string, role: string) => {
-      // Add to transcript immediately
       const line: TranscriptLine = {
         id: uid(),
         speaker,
@@ -668,7 +639,7 @@ export default function HarmonicDashboard() {
           setRecaps((prev) => [...prev, data.summaryRecap!]);
         }
       } catch {
-        // Graceful: just keep the transcript line
+        // Ephemeral resilience: keep local transcript intact
       } finally {
         setIsProcessing(false);
       }
@@ -676,7 +647,7 @@ export default function HarmonicDashboard() {
     [apiKey]
   );
 
-  // ── Speech Recognition ────────────────────────────────────
+  // ── Microphone Controller ─────────────────────────────────
   const toggleMic = useCallback(() => {
     if (typeof window === "undefined") return;
 
@@ -691,7 +662,7 @@ export default function HarmonicDashboard() {
     const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Web Speech Recognition is not supported in this browser. Try Chrome.");
+      alert("Web Speech Recognition API unavailable in this browser engine.");
       return;
     }
 
@@ -712,7 +683,7 @@ export default function HarmonicDashboard() {
         .join(" ")
         .trim();
       if (finalText) {
-        processText(finalText, "You", "Live Mic");
+        processText(finalText, "You", "Hardware Input");
       }
     };
 
@@ -730,11 +701,10 @@ export default function HarmonicDashboard() {
     rec.start();
   }, [isListening, processText]);
 
-  // ── Simulation ────────────────────────────────────────────
+  // ── Deterministic Simulation Runner ───────────────────────
   const runSimulation = useCallback(() => {
     if (isSimulating) return;
 
-    // Clear previous state
     setTranscript([]);
     setActions([]);
     setHindiLines([]);
@@ -749,7 +719,6 @@ export default function HarmonicDashboard() {
 
     SIMULATION_EVENTS.forEach((evt) => {
       const t = setTimeout(async () => {
-        // Add transcript line
         const line: TranscriptLine = {
           id: uid(),
           speaker: evt.speaker,
@@ -758,11 +727,8 @@ export default function HarmonicDashboard() {
           timestamp: now(),
         };
         setTranscript((prev) => [...prev, line]);
-
-        // Add hindi translation
         setHindiLines((prev) => [...prev, `[${evt.speaker}]: ${evt.hindi}`]);
 
-        // Add actions
         if (evt.actions.length) {
           setActions((prev) => [
             ...prev,
@@ -770,12 +736,10 @@ export default function HarmonicDashboard() {
           ]);
         }
 
-        // Add notes
         if (evt.notes.length) {
           setNotes((prev) => [...prev, ...evt.notes]);
         }
 
-        // Add jargon
         if (evt.jargon?.length) {
           setJargon((prev) => {
             const existing = new Set(prev.map((j) => j.term));
@@ -784,7 +748,6 @@ export default function HarmonicDashboard() {
           });
         }
 
-        // Add recaps
         if (evt.recap) {
           setRecaps((prev) => [...prev, evt.recap]);
         }
@@ -794,7 +757,7 @@ export default function HarmonicDashboard() {
           setTimeout(() => {
             setIsSimulating(false);
             setWaveActive(false);
-          }, 2000);
+          }, 1800);
         }
       }, evt.delayMs);
 
@@ -802,35 +765,31 @@ export default function HarmonicDashboard() {
     });
   }, [isSimulating]);
 
-  // Cleanup simulation timers
   useEffect(() => {
     return () => {
       simTimersRef.current.forEach(clearTimeout);
     };
   }, []);
 
-  // ── AAC Speak ─────────────────────────────────────────────
+  // ── AAC Synthesizer ───────────────────────────────────────
   const speakAAC = useCallback(
     (phrase: string) => {
       if (typeof window === "undefined" || !phrase.trim()) return;
 
       const utterance = new window.SpeechSynthesisUtterance(phrase);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
+      utterance.rate = 0.92;
+      utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
 
-      // Append to transcript
       const line: TranscriptLine = {
         id: uid(),
         speaker: "Sam (AAC)",
-        role: "Non-Speaking AAC",
+        role: "Synthesized Output",
         text: phrase,
         timestamp: now(),
       };
       setTranscript((prev) => [...prev, line]);
-
-      // Also push a Hindi note
-      setHindiLines((prev) => [...prev, `[Sam (AAC)]: ${phrase} (एएसी संदेश)`]);
+      setHindiLines((prev) => [...prev, `[Sam (AAC)]: ${phrase} (एएसी ध्वनि)`]);
     },
     []
   );
@@ -841,7 +800,6 @@ export default function HarmonicDashboard() {
     setAacInput("");
   }, [aacInput, speakAAC]);
 
-  // ── Toggle action done ────────────────────────────────────
   const toggleAction = (id: string) => {
     setActions((prev) =>
       prev.map((a) => (a.id === id ? { ...a, done: !a.done } : a))
@@ -849,109 +807,183 @@ export default function HarmonicDashboard() {
   };
 
   // ────────────────────────────────────────────────────────────
-  //  Card renders
+  //  Component: Primary Live Audio & Diarized Transcript Panel
   // ────────────────────────────────────────────────────────────
 
   const cardTranscript = (
-    <Card
-      id="card-live-audio"
-      title="Live Audio & Diarization"
+    <InstrumentPanel
+      id="panel-live-stream"
+      title="Live Stream // Diarization"
       icon={Radio}
-      iconColor="bg-violet-500/20 text-violet-400"
-      glow={waveActive || isListening || isSimulating}
-      glowColor={isListening ? "red" : isSimulating ? "amber" : "violet"}
       badge={
-        <span
-          className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 transition-colors ${
-            isListening
-              ? "bg-red-500/20 text-red-300 border border-red-500/40"
-              : isSimulating
-              ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-              : waveActive
-              ? "bg-violet-500/20 text-violet-300 border border-violet-500/40"
-              : "bg-slate-700/60 text-slate-400 border border-slate-600/30"
-          }`}
-        >
+        <div className="flex items-center gap-1.5 font-mono text-[11px]">
           <span
-            className={`w-1.5 h-1.5 rounded-full ${
+            className={`w-2 h-2 rounded-none inline-block ${
               isListening
-                ? "bg-red-400 animate-ping"
+                ? "bg-red-500 animate-pulse"
                 : isSimulating
-                ? "bg-amber-400 animate-pulse"
+                ? "bg-amber-500 animate-pulse"
                 : waveActive
-                ? "bg-violet-400 animate-pulse"
-                : "bg-slate-500"
+                ? "bg-emerald-500"
+                : "bg-zinc-600"
             }`}
           />
-          {isListening ? "MIC REC" : isSimulating ? "SIMULATION" : waveActive ? "LIVE" : "IDLE"}
-        </span>
+          <span className="text-zinc-300">
+            {isListening
+              ? "REC_ACTIVE"
+              : isSimulating
+              ? "SIM_RUNNING"
+              : waveActive
+              ? "STREAM_LIVE"
+              : "STANDBY"}
+          </span>
+        </div>
       }
     >
-      <div className="mb-4">
-        <LiveWaveformCanvas active={waveActive} />
-      </div>
-      <div className="space-y-2.5 h-56 sm:h-64 md:h-72 overflow-y-auto pr-1.5 custom-scrollbar">
-        {transcript.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm gap-2">
-            <Mic className="w-8 h-8 opacity-30" />
-            <p>Start the mic or run a simulation to see live transcripts</p>
+      <div className="space-y-3">
+        <HardwareVuMeter active={waveActive || isListening || isSimulating} />
+
+        {/* Diarized Transcript Feed */}
+        <div className="space-y-2 h-64 sm:h-72 lg:h-80 overflow-y-auto pr-1 custom-scrollbar">
+          {transcript.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-6">
+              <Mic className="w-5 h-5 text-zinc-600" />
+              <span>AWAITING AUDIO FRAMES. TOGGLE MIC OR RUN SIMULATION.</span>
+            </div>
+          )}
+
+          {transcript.map((line) => {
+            const style = getSpeakerStyle(line.speaker);
+            return (
+              <div
+                key={line.id}
+                className={`p-2.5 rounded bg-zinc-950/70 border ${style.border} transition-colors animate-fade-in-up`}
+              >
+                <div className="flex items-center justify-between text-xs font-mono mb-1.5 pb-1 border-b border-zinc-800/60">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.2 rounded border ${style.tag}`}
+                    >
+                      {line.speaker}
+                    </span>
+                    <span className="text-[11px] text-zinc-500 font-mono">
+                      // {line.role}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
+                    [{line.timestamp}]
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-sans">
+                  {bionicMode ? <BionicText text={line.text} /> : line.text}
+                </p>
+              </div>
+            );
+          })}
+          <div ref={transcriptEndRef} />
+        </div>
+
+        {isProcessing && (
+          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 border-t border-zinc-800 pt-2">
+            <span className="inline-block w-2 h-2 bg-amber-400 animate-ping" />
+            <span>HARMONIC ENGINE PROCESSING CHUNK...</span>
           </div>
         )}
-        {transcript.map((line) => (
-          <div
-            key={line.id}
-            className="flex gap-3 p-3 sm:p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/30 hover:border-slate-600/50 transition-all group animate-fade-in-up"
-          >
-            <div className="shrink-0 mt-0.5">
-              <div className="w-7 h-7 rounded-full bg-slate-700/80 flex items-center justify-center border border-slate-600/40">
-                <User className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className={`text-xs font-semibold ${speakerColor(line.speaker)}`}>
-                  {line.speaker}
-                </span>
-                <span className="text-xs text-slate-600">·</span>
-                <span className="text-xs text-slate-400">{line.role}</span>
-                <span className="ml-auto text-xs text-slate-500">{line.timestamp}</span>
-              </div>
-              <p className="text-sm text-slate-200 leading-relaxed">
-                {bionicMode ? <BionicText text={line.text} /> : line.text}
-              </p>
-            </div>
-          </div>
-        ))}
-        <div ref={transcriptEndRef} />
       </div>
-      {isProcessing && (
-        <div className="mt-3 flex items-center gap-2 text-xs text-violet-400 animate-pulse">
-          <div className="w-3 h-3 rounded-full border-2 border-violet-400 border-t-transparent animate-spin" />
-          Processing with Harmonic AI…
-        </div>
-      )}
-    </Card>
+    </InstrumentPanel>
   );
 
-  const cardActions = (
-    <Card
-      id="card-action-items"
-      title="Cognitive Layer / ADHD Focus"
-      icon={Brain}
-      iconColor="bg-amber-500/20 text-amber-400"
+  // ────────────────────────────────────────────────────────────
+  //  Component: AAC Voice Synthesizer
+  // ────────────────────────────────────────────────────────────
+
+  const AAC_QUICK_PHRASES = [
+    "Understood, on it",
+    "Need 5 mins",
+    "I agree",
+    "Raising a blocker",
+  ];
+
+  const cardAAC = (
+    <InstrumentPanel
+      id="panel-aac-synthesizer"
+      title="AAC Voice Output // Sam"
+      icon={Volume2}
       badge={
-        <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
-          {actions.filter((a) => !a.done).length} open
+        <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/50 border border-emerald-800 px-1.5 py-0.5 rounded">
+          AAC_SYNTH
         </span>
       }
     >
-      <div className="space-y-2.5 h-64 sm:h-72 md:h-80 overflow-y-auto pr-1.5 custom-scrollbar">
+      <div className="space-y-3">
+        {/* Quick Phrase Matrix */}
+        <div className="grid grid-cols-2 gap-2">
+          {AAC_QUICK_PHRASES.map((phrase) => (
+            <button
+              key={phrase}
+              id={`aac-phrase-${phrase.replace(/\s+/g, "-").toLowerCase()}`}
+              onClick={() => speakAAC(phrase)}
+              className="p-2 rounded border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-200 text-xs font-mono text-left transition-colors instrument-btn flex items-center justify-between"
+            >
+              <span className="truncate">{phrase}</span>
+              <Volume2 className="w-3 h-3 text-zinc-400 shrink-0 ml-1" />
+            </button>
+          ))}
+        </div>
+
+        {/* Custom Phrase Input */}
+        <div className="flex flex-col gap-2">
+          <textarea
+            id="aac-custom-input"
+            value={aacInput}
+            onChange={(e) => setAacInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleAacSubmit();
+              }
+            }}
+            placeholder="Type synthesised phrase for meeting broadcast..."
+            className="w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-600 resize-none focus:outline-none focus:border-zinc-400 transition-colors"
+            rows={2}
+          />
+          <button
+            id="aac-speak-btn"
+            onClick={handleAacSubmit}
+            disabled={!aacInput.trim()}
+            className="w-full py-2 rounded bg-zinc-200 hover:bg-white text-zinc-950 font-mono text-xs font-semibold uppercase tracking-wider instrument-btn flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <Volume2 className="w-3.5 h-3.5" />
+            Transmit Voice Phrase
+          </button>
+        </div>
+      </div>
+    </InstrumentPanel>
+  );
+
+  // ────────────────────────────────────────────────────────────
+  //  Component: Cognitive Layer / Action Matrix
+  // ────────────────────────────────────────────────────────────
+
+  const cardActions = (
+    <InstrumentPanel
+      id="panel-action-items"
+      title="Action Matrix // ADHD Focus"
+      icon={Brain}
+      badge={
+        <span className="font-mono text-[10px] text-amber-400 bg-amber-950/60 border border-amber-800/80 px-1.5 py-0.5 rounded">
+          {actions.filter((a) => !a.done).length} PENDING
+        </span>
+      }
+    >
+      <div className="space-y-2 h-64 sm:h-72 overflow-y-auto pr-1 custom-scrollbar">
         {actions.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm gap-2">
-            <CheckCircle2 className="w-8 h-8 opacity-30" />
-            <p>Action items will appear here</p>
+          <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-6">
+            <CheckCircle2 className="w-5 h-5 text-zinc-600" />
+            <span>ACTION REGISTER EMPTY. TASKS AUTO-EXTRACT FROM SPEECH.</span>
           </div>
         )}
+
         {actions.map((action) => (
           <div
             key={action.id}
@@ -964,41 +996,42 @@ export default function HarmonicDashboard() {
                 toggleAction(action.id);
               }
             }}
-            className={`p-4 rounded-xl border transition-all cursor-pointer select-none animate-fade-in-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] hover:-translate-y-0.5 ${
-              action.done
-                ? "bg-slate-800/20 border-slate-700/20 opacity-50 hover:opacity-75"
-                : "bg-slate-800/50 border-slate-700/40 hover:border-slate-600/60 hover:shadow-lg shadow-black/20"
-            }`}
             onClick={() => toggleAction(action.id)}
             id={`action-item-${action.id}`}
+            className={`p-2.5 rounded border transition-colors cursor-pointer select-none text-xs font-mono animate-fade-in-up ${
+              action.done
+                ? "bg-zinc-950/40 border-zinc-800 text-zinc-500 line-through"
+                : "bg-zinc-950 border-zinc-700/80 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-900"
+            }`}
           >
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 shrink-0">
-                {action.done ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                ) : (
-                  <Circle className="w-5 h-5 text-slate-500" />
-                )}
-              </div>
+            <div className="flex items-start gap-2.5">
+              <button
+                type="button"
+                className={`w-4 h-4 rounded-none border mt-0.5 shrink-0 flex items-center justify-center transition-colors ${
+                  action.done
+                    ? "bg-emerald-950 border-emerald-700 text-emerald-400"
+                    : "border-zinc-600 bg-zinc-900 text-transparent"
+                }`}
+                aria-label="Toggle action completion"
+              >
+                {action.done && <Check className="w-3 h-3 stroke-[3]" />}
+              </button>
+
               <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm leading-snug mb-2 ${
-                    action.done ? "line-through text-slate-500" : "text-slate-200 font-medium"
-                  }`}
-                >
+                <p className="font-sans text-xs text-zinc-200 mb-1.5 leading-snug">
                   {bionicMode && !action.done ? <BionicText text={action.task} /> : action.task}
                 </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 border border-slate-600/40 flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    {action.assignee}
+
+                <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono">
+                  <span className="px-1.5 py-0.2 rounded border border-zinc-700 bg-zinc-800 text-zinc-300">
+                    @{action.assignee}
                   </span>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${PRIORITY_STYLES[action.priority]}`}
+                    className={`px-1.5 py-0.2 rounded border ${PRIORITY_TAGS[action.priority]}`}
                   >
-                    {action.priority}
+                    [{action.priority.toUpperCase()}]
                   </span>
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                  <span className="text-zinc-500 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {action.due}
                   </span>
@@ -1008,200 +1041,153 @@ export default function HarmonicDashboard() {
           </div>
         ))}
       </div>
-    </Card>
+    </InstrumentPanel>
   );
 
+  // ────────────────────────────────────────────────────────────
+  //  Component: Multilingual Layer & Monospace Lexicon Table
+  // ────────────────────────────────────────────────────────────
+
   const cardHindi = (
-    <Card
-      id="card-hindi-translation"
-      title="Sensory / Multilingual Layer"
+    <InstrumentPanel
+      id="panel-multilingual"
+      title="Multilingual Layer // Hindi Captions"
       icon={Languages}
-      iconColor="bg-pink-500/20 text-pink-400"
       badge={
-        <span className="text-xs px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 font-medium">
-          हिन्दी
+        <span className="font-mono text-[10px] text-pink-400 bg-pink-950/50 border border-pink-800 px-1.5 py-0.5 rounded">
+          DEVANAGARI
         </span>
       }
     >
-      <div className="h-64 sm:h-72 md:h-80 overflow-y-auto pr-1.5 custom-scrollbar space-y-3">
+      <div className="space-y-3 h-64 sm:h-72 overflow-y-auto pr-1 custom-scrollbar">
         {hindiLines.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm gap-2">
-            <Languages className="w-8 h-8 opacity-30" />
-            <p>Hindi captions will appear here in real-time</p>
+          <div className="flex flex-col items-center justify-center h-32 text-zinc-500 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-4">
+            <Languages className="w-5 h-5 text-zinc-600" />
+            <span>REAL-TIME DEVANAGARI STREAM WILL DISPLAY HERE</span>
           </div>
         )}
+
         {hindiLines.map((line, i) => (
           <div
             key={i}
-            className="p-4 rounded-xl bg-[#1a0f2e]/60 border border-pink-500/20 hover:border-pink-500/40 transition-all animate-fade-in-up"
+            className="p-2.5 rounded bg-zinc-950/80 border border-zinc-800 text-zinc-200 animate-fade-in-up"
           >
-            <p className="text-base leading-loose text-pink-100 font-medium"
-               style={{ fontFamily: "'Noto Sans Devanagari', 'Mangal', serif", fontSize: "1.05rem" }}>
+            <p
+              className="text-xs sm:text-sm leading-relaxed"
+              style={{ fontFamily: "'Noto Sans Devanagari', -apple-system, sans-serif" }}
+            >
               {line}
             </p>
           </div>
         ))}
 
-        {/* Dynamic Technical Glossary */}
+        {/* Monospace Lexicon Table */}
         {jargon.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-pink-500/20 animate-fade-in-up">
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen className="w-3.5 h-3.5 text-pink-400/70" />
-              <p className="text-xs font-semibold text-pink-400/70 uppercase tracking-widest">
-                Detected Technical Glossary
-              </p>
+          <div className="mt-3 border border-zinc-800 bg-zinc-950 rounded">
+            <div className="px-3 py-1.5 border-b border-zinc-800 text-[10px] font-mono uppercase tracking-wider text-zinc-400 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Monospace Lexicon Table</span>
+              </div>
+              <span className="text-zinc-500">[{jargon.length} TERMS]</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="divide-y divide-zinc-800 text-xs font-mono">
               {jargon.map((j, i) => (
-                <span
+                <div
                   key={i}
-                  className="jargon-pill relative cursor-help px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-xs font-medium text-pink-300 hover:bg-pink-500/25 hover:border-pink-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0d1526] transition-all animate-pop-in"
-                  tabIndex={0}
+                  className="px-3 py-2 flex flex-col sm:flex-row sm:items-baseline gap-1.5 sm:gap-3"
                 >
-                  {j.term}
-                  <span className="jargon-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-3 rounded-xl bg-[#0d1526] border border-slate-600/60 shadow-2xl text-xs text-slate-300 leading-relaxed font-normal pointer-events-none z-30">
-                    <span className="font-semibold text-pink-300 block mb-1">{j.term}</span>
-                    {j.definition}
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[#0d1526] border-r border-b border-slate-600/60 -mt-1" />
+                  <span className="text-zinc-200 font-bold bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700 text-[11px] w-fit shrink-0">
+                    {j.term}
                   </span>
-                </span>
+                  <span className="text-zinc-400 font-sans text-xs leading-relaxed">
+                    {j.definition}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
         )}
       </div>
-    </Card>
-  );
-
-  const AAC_QUICK_PHRASES = [
-    "Understood, on it",
-    "Need 5 mins",
-    "I agree",
-    "Raising a blocker",
-  ];
-
-  const cardAAC = (
-    <Card
-      id="card-aac-voice"
-      title="AAC Voice Synthesizer"
-      icon={Volume2}
-      iconColor="bg-emerald-500/20 text-emerald-400"
-      badge={
-        <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
-          Sam
-        </span>
-      }
-    >
-      <div className="space-y-4 h-64 sm:h-72 md:h-80 flex flex-col">
-        <div className="grid grid-cols-2 gap-2">
-          {AAC_QUICK_PHRASES.map((phrase) => (
-            <button
-              key={phrase}
-              id={`aac-phrase-${phrase.replace(/\s+/g, "-").toLowerCase()}`}
-              onClick={() => speakAAC(phrase)}
-              className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] text-emerald-300 text-sm font-medium transition-all text-left leading-tight active:scale-95"
-            >
-              {phrase}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 flex flex-col gap-2">
-          <textarea
-            id="aac-custom-input"
-            value={aacInput}
-            onChange={(e) => setAacInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleAacSubmit();
-              }
-            }}
-            placeholder="Type a custom message…"
-            className="flex-1 w-full bg-slate-800/60 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm resize-none focus:outline-none focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] transition-colors"
-            rows={3}
-          />
-          <button
-            id="aac-speak-btn"
-            onClick={handleAacSubmit}
-            disabled={!aacInput.trim()}
-            className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1526] text-white font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
-          >
-            <Volume2 className="w-4 h-4" />
-            Speak into Meeting
-          </button>
-        </div>
-      </div>
-    </Card>
+    </InstrumentPanel>
   );
 
   // ────────────────────────────────────────────────────────────
-  //  Layout by active tab
+  //  Layout Orchestration
   // ────────────────────────────────────────────────────────────
 
-  function renderGrid() {
+  function renderWorkstationLayout() {
     if (activeTab === "all") {
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {cardTranscript}
-          {cardActions}
-          {cardHindi}
-          {cardAAC}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* Primary Focus: 60% Screen Weight */}
+          <div className="lg:col-span-7 space-y-4">
+            {cardTranscript}
+            {cardAAC}
+          </div>
+          {/* Secondary Focus: 40% Screen Weight */}
+          <div className="lg:col-span-5 space-y-4">
+            {cardActions}
+            {cardHindi}
+          </div>
         </div>
       );
     }
+
     if (activeTab === "priya") {
       return (
-        <div className="space-y-5">
-          <div className="p-4 rounded-2xl bg-[#1a0f2e]/80 border border-pink-500/30 text-pink-200 text-sm flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-pink-400 shrink-0" />
-            Priya's profile — Sensory/High-Contrast mode. Large Devanagari captions displayed.
+        <div className="space-y-4">
+          <div className="p-3 rounded bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-pink-400 shrink-0" />
+            <span>WORKSTATION PROFILE: PRIYA // SENSORY CAPTIONS PRIORITY</span>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {cardHindi}
-            {cardTranscript}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7">{cardHindi}</div>
+            <div className="lg:col-span-5">{cardTranscript}</div>
           </div>
         </div>
       );
     }
+
     if (activeTab === "alex") {
       return (
-        <div className="space-y-5">
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm flex items-center gap-3">
-            <Brain className="w-5 h-5 text-amber-400 shrink-0" />
-            Alex's profile — ADHD Focus mode. Action items front and centre.
+        <div className="space-y-4">
+          <div className="p-3 rounded bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 flex items-center gap-2">
+            <Brain className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>WORKSTATION PROFILE: ALEX // ADHD ACTION ITEM PRIORITY</span>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {cardActions}
-            {cardTranscript}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7">{cardActions}</div>
+            <div className="lg:col-span-5">{cardTranscript}</div>
           </div>
         </div>
       );
     }
+
     if (activeTab === "sam") {
       return (
-        <div className="space-y-5">
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-sm flex items-center gap-3">
-            <Volume2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            Sam's profile — Non-Speaking/AAC Voice mode. Quick-reply panel is primary.
+        <div className="space-y-4">
+          <div className="p-3 rounded bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 flex items-center gap-2">
+            <Volume2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>WORKSTATION PROFILE: SAM // AAC VOCAL SYNTHESIZER PRIORITY</span>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {cardAAC}
-            {cardTranscript}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7">{cardAAC}</div>
+            <div className="lg:col-span-5">{cardTranscript}</div>
           </div>
         </div>
       );
     }
+
     return null;
   }
 
   // ────────────────────────────────────────────────────────────
-  //  Render
+  //  Root Render
   // ────────────────────────────────────────────────────────────
 
   return (
     <>
-
       <SettingsModal
         open={showSettings}
         onClose={() => setShowSettings(false)}
@@ -1216,92 +1202,87 @@ export default function HarmonicDashboard() {
         notes={notes}
       />
 
-      <div className="min-h-screen bg-[#060d1f] text-white font-sans">
-        {/* ── Background decorative gradients ── */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-600/8 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/8 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-0 w-64 h-64 bg-pink-600/5 rounded-full blur-3xl" />
-        </div>
-
-        {/* ── Header ── */}
-        <header className="relative z-10 border-b border-slate-700/40 bg-[#060d1f]/85 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 sm:py-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
-            {/* Brand */}
-            <div className="flex items-center gap-3 mr-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25 shrink-0">
-                <Accessibility className="w-5 h-5 text-white" />
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans instrument-grid-bg">
+        {/* Workstation Console Header */}
+        <header className="border-b border-zinc-800 bg-zinc-950/95 sticky top-0 z-30">
+          <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            {/* Instrument Brand */}
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded bg-zinc-900 border border-zinc-700 flex items-center justify-center font-mono text-xs font-bold text-zinc-200">
+                H•Q
               </div>
               <div>
-                <h1 className="text-base font-bold text-white tracking-tight leading-none">
-                  Harmonic
-                </h1>
-                <p className="text-xs text-slate-400 leading-none mt-1">
-                  Adaptive Semantic Middleware
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-100">
+                    HARMONIC
+                  </h1>
+                  <span className="text-[10px] font-mono text-zinc-500 border border-zinc-800 px-1 rounded bg-zinc-900">
+                    v0.2-INST
+                  </span>
+                </div>
+                <p className="text-[10px] font-mono text-zinc-500">
+                  TACTILE ACCESSIBILITY MIDDLEWARE
                 </p>
               </div>
             </div>
 
-            {/* Live pill */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30">
-              <span className={`w-2 h-2 rounded-full ${isListening ? "bg-red-400 animate-ping" : "bg-red-500 animate-pulse"}`} />
-              <span className="text-xs text-red-300 font-medium hidden xs:inline sm:inline">
-                Sprint Planning Call (Live — Ephemeral)
-              </span>
-              <span className="text-xs text-red-300 font-medium xs:hidden sm:hidden">
-                Live
-              </span>
+            {/* Hardware Status Indicators */}
+            <div className="hidden sm:flex items-center gap-3 text-[11px] font-mono text-zinc-400">
+              <div className="flex items-center gap-1.5 border border-zinc-800 bg-zinc-900 px-2 py-1 rounded">
+                <span
+                  className={`w-1.5 h-1.5 rounded-none ${
+                    isListening ? "bg-red-500 animate-ping" : "bg-emerald-500"
+                  }`}
+                />
+                <span>STATUS: {isListening ? "RECORDING" : "STANDBY"}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 border border-zinc-800 bg-zinc-900 px-2 py-1 rounded">
+                {networkOk ? (
+                  <Wifi className="w-3 h-3 text-emerald-400" />
+                ) : (
+                  <WifiOff className="w-3 h-3 text-amber-400" />
+                )}
+                <span>NET: {networkOk ? "ONLINE" : "OFFLINE_FALLBACK"}</span>
+              </div>
             </div>
 
-            {/* Network indicator */}
-            <div className="hidden md:flex items-center gap-2">
-              {networkOk ? (
-                <Wifi className="w-4 h-4 text-emerald-400" />
-              ) : (
-                <WifiOff className="w-4 h-4 text-amber-400" />
-              )}
-              <span className="text-xs text-slate-400">
-                {networkOk ? "Online" : "Offline fallback"}
-              </span>
-            </div>
-
-            {/* Controls */}
+            {/* Tactile Hardware Controls */}
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Mic button */}
+              {/* Mic Toggle Switch */}
               <button
                 id="mic-toggle-btn"
                 onClick={toggleMic}
                 disabled={isSimulating}
-                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono uppercase tracking-wider instrument-btn ${
                   isListening
-                    ? "bg-red-500/20 border border-red-500/60 text-red-300 pulse-glow-red"
-                    : "bg-violet-600 hover:bg-violet-500 text-white border border-violet-500/50 shadow-lg shadow-violet-600/25"
-                } disabled:opacity-40 disabled:cursor-not-allowed active:scale-95`}
-                aria-label={isListening ? "Stop microphone" : "Start microphone"}
+                    ? "bg-red-950 border border-red-700 text-red-200 font-bold"
+                    : "bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200"
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
+                aria-label={isListening ? "Halt microphone" : "Engage microphone"}
               >
                 {isListening ? (
-                  <MicOff className="w-4 h-4" />
+                  <MicOff className="w-3.5 h-3.5 text-red-400" />
                 ) : (
-                  <Mic className="w-4 h-4" />
+                  <Mic className="w-3.5 h-3.5 text-zinc-300" />
                 )}
-                <span>{isListening ? "Stop Mic" : "Start Mic"}</span>
+                <span>{isListening ? "HALT MIC" : "ENGAGE MIC"}</span>
               </button>
 
-              {/* Simulation button */}
+              {/* Simulation Dispatcher */}
               <button
                 id="simulation-btn"
                 onClick={runSimulation}
                 disabled={isSimulating || isListening}
-                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono uppercase tracking-wider instrument-btn ${
                   isSimulating
-                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300 pulse-glow-amber"
-                    : "bg-slate-800/80 border-slate-600/50 text-slate-300 hover:bg-slate-700/80 hover:text-white"
-                } disabled:opacity-40 disabled:cursor-not-allowed active:scale-95`}
-                aria-label="Run 30 second simulation"
+                    ? "bg-amber-950 border border-amber-700 text-amber-200 font-bold"
+                    : "bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300"
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
+                aria-label="Dispatch 30 second simulation test"
               >
-                <Zap className={`w-4 h-4 ${isSimulating ? "animate-pulse" : ""}`} />
-                <span className="hidden sm:inline">{isSimulating ? "Simulating…" : "Run 30s Simulation"}</span>
-                <span className="sm:hidden">{isSimulating ? "Simulating…" : "Simulate"}</span>
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isSimulating ? "RUNNING..." : "DISPATCH SIM"}</span>
               </button>
 
               {/* Catch Me Up */}
@@ -1309,97 +1290,100 @@ export default function HarmonicDashboard() {
                 id="catch-me-up-btn"
                 onClick={() => setShowCatchUp(true)}
                 disabled={recaps.length === 0 && notes.length === 0}
-                className="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all border bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-                aria-label="Open Catch Me Up drawer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-mono uppercase tracking-wider instrument-btn disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Open catch me up telemetry drawer"
               >
-                <Sparkles className="w-4 h-4 text-indigo-400" />
-                <span className="hidden sm:inline">Catch Me Up</span>
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">CATCH UP</span>
+                {recaps.length > 0 && (
+                  <span className="text-[10px] text-zinc-400">[{recaps.length}]</span>
+                )}
               </button>
 
-              {/* Bionic Reading */}
+              {/* Bionic Reading Switch */}
               <button
                 id="bionic-reading-btn"
                 onClick={() => setBionicMode((v) => !v)}
-                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-mono uppercase tracking-wider instrument-btn ${
                   bionicMode
-                    ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300 ring-1 ring-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                    : "bg-slate-800/80 border-slate-600/50 text-slate-300 hover:bg-slate-700/80 hover:text-white"
+                    ? "bg-cyan-950 border-cyan-700 text-cyan-200 font-bold"
+                    : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-300"
                 }`}
                 aria-label="Toggle bionic reading mode"
               >
-                {bionicMode ? <EyeOff className="w-4 h-4 text-cyan-400" /> : <Eye className="w-4 h-4" />}
-                <span className="hidden sm:inline">{bionicMode ? "Bionic On" : "Bionic"}</span>
+                {bionicMode ? (
+                  <EyeOff className="w-3.5 h-3.5 text-cyan-300" />
+                ) : (
+                  <Eye className="w-3.5 h-3.5 text-zinc-400" />
+                )}
+                <span>BIONIC: {bionicMode ? "ON" : "OFF"}</span>
               </button>
 
               {/* Settings */}
               <button
                 id="settings-btn"
                 onClick={() => setShowSettings(true)}
-                className="p-2.5 rounded-xl border border-slate-600/50 text-slate-400 hover:text-white hover:bg-slate-700/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060d1f] transition-all active:scale-95"
-                aria-label="Open settings"
+                className="p-1.5 rounded border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 instrument-btn"
+                aria-label="Open instrument settings"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* ── Tab bar ── */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-0 flex gap-1 overflow-x-auto tab-scroll">
+          {/* Mode Selector Tabs */}
+          <div className="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto tab-scroll border-t border-zinc-800/80">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 id={`tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-[#060d1f] rounded-t-lg ${
+                className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === tab.id
-                    ? "border-violet-500 text-violet-300 bg-violet-500/5"
-                    : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/30"
+                    ? "border-zinc-200 text-zinc-100 bg-zinc-900 font-bold"
+                    : "border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50"
                 }`}
               >
-                <span>{tab.emoji}</span>
-                <span>{tab.label}</span>
-                {tab.sub && (
-                  <span className="text-xs text-slate-500 hidden md:inline">
-                    · {tab.sub}
-                  </span>
-                )}
+                [{tab.code}] {tab.label}
               </button>
             ))}
           </div>
         </header>
 
-        {/* ── Main content ── */}
-        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          {/* Simplified notes banner */}
+        {/* Workstation Main Rack */}
+        <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
+          {/* Executive Simplified Notes Banner */}
           {notes.length > 0 && (
-            <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-start gap-3.5 animate-fade-in-up shadow-lg shadow-indigo-950/20">
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                <ChevronDown className="w-4 h-4 text-indigo-400 rotate-[-90deg]" />
+            <div className="mb-4 p-3 rounded bg-zinc-900/90 border border-zinc-800 animate-fade-in-up">
+              <div className="flex items-center gap-2 mb-1.5 text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+                <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
+                <span>Executive Simplified Notes // Takeaway Feed</span>
               </div>
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-indigo-400 mb-2 uppercase tracking-widest">
-                  Simplified Notes
-                </p>
-                <ul className="space-y-1.5">
-                  {notes.slice(-6).map((note, i) => (
-                    <li key={i} className="text-sm text-indigo-200 leading-relaxed">
-                      {note}
-                    </li>
-                  ))}
-                </ul>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans text-zinc-300">
+                {notes.slice(-4).map((note, i) => (
+                  <div
+                    key={i}
+                    className="p-2 rounded bg-zinc-950/80 border border-zinc-800 flex items-start gap-2"
+                  >
+                    <span className="text-zinc-500 font-mono text-[10px] mt-0.5">
+                      0{i + 1}
+                    </span>
+                    <span>{note}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Cards */}
-          {renderGrid()}
+          {/* Dynamic Workstation Layout */}
+          {renderWorkstationLayout()}
         </main>
 
-        {/* ── Footer ── */}
-        <footer className="relative z-10 border-t border-slate-700/30 mt-8 py-6">
-          <div className="max-w-7xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600">
-            <span>Harmonic v0.1 · Real-time Adaptive Accessibility Middleware</span>
-            <span>Built with Next.js {/* 16 */} · Powered by Gemini 1.5 Flash</span>
+        {/* Workstation Footer Chassis */}
+        <footer className="border-t border-zinc-800 mt-8 py-4 bg-zinc-950">
+          <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-500">
+            <span>HARMONIC WORKSTATION // TACTILE ACCESSIBILITY INSTRUMENT</span>
+            <span>SPEC: ZERO_PERSISTENCE • GEMINI_1.5_FLASH • WCAG_AAA</span>
           </div>
         </footer>
       </div>

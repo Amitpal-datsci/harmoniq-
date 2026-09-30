@@ -208,6 +208,10 @@ Processes raw spoken text, cleans fillers, generates translations, extracts acti
    - *Decision*: Added explicit `:focus-visible` ring outlines, keyboard event listeners (`Enter` / `Space` toggling on action items), and screen-reader `aria-label` attributes.
    - *Rationale*: Essential for an accessibility-first product intended for motor-impaired and keyboard-only users.
 
+6. **Tactile Accessibility Instrument Design System Overhaul**:
+   - *Decision*: Eliminated generic SaaS clichés (gradients, ambient glow rings, floating rounded-2xl cards, pill badges). Implemented an asymmetric 60/40 workstation layout (`border-zinc-800`, `bg-zinc-950`), a hardware-grade segmented VU-meter, a keyboard-navigable Monospace Lexicon Table, and tactile mechanical buttons.
+   - *Rationale*: Neurodivergent and accessibility-focused users require high-density, high-contrast, distraction-free instruments rather than decorative aesthetics. Monospace typography ensures crisp tabular scanning for timestamps, tasks, and telemetry.
+
 ---
 
 ## 5. Bugs Encountered & Resolutions
