@@ -128,6 +128,81 @@ export interface HarmonizerResponse {
 | `isListening` | `boolean` | `false` | Web Speech microphone active flag |
 | `isSimulating` | `boolean` | `false` | 30s offline simulation running flag |
 | `apiKey` | `string` | `""` | User-provided session Gemini API key |
+| `currentSessionId` | `string \| null` | `null` | Active PostgreSQL session ID |
+| `dbStatus` | `"IDLE" \| "SYNCING" \| "SYNCED" \| "OFFLINE"` | `"IDLE"` | Real-time database sync telemetry status |
+
+### 2.3 PostgreSQL Relational Schema (`prisma/schema.prisma`)
+
+```prisma
+model User {
+  id        String       @id @default(cuid())
+  email     String       @unique
+  name      String?
+  sessions  Session[]
+  actions   ActionItem[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Session {
+  id              String           @id @default(cuid())
+  title           String           @default("Sprint Planning Call")
+  summaryRecaps   String[]         @default([])
+  simplifiedNotes String[]         @default([])
+  userId          String?
+  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  turns           TranscriptTurn[]
+  actions         ActionItem[]
+  glossary        CustomGlossary[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([createdAt])
+}
+
+model TranscriptTurn {
+  id               String   @id @default(cuid())
+  sessionId        String
+  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  speaker          String
+  role             String
+  text             String   @db.Text
+  hindiTranslation String?  @db.Text
+  timestamp        String
+  createdAt        DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model ActionItem {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  task      String
+  assignee  String   @default("Team")
+  priority  String   @default("Medium") // "High" | "Medium" | "Low"
+  due       String   @default("TBD")
+  completed Boolean  @default(false)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+}
+
+model CustomGlossary {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  term       String
+  definition String   @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([sessionId, term])
+  @@index([sessionId])
+}
+```
 
 ---
 
@@ -184,6 +259,29 @@ Processes raw spoken text, cleans fillers, generates translations, extracts acti
 }
 ```
 
+### 3.2 `GET /api/sessions` & `POST /api/sessions`
+
+#### `GET /api/sessions`
+- **Query Params**: `?id=[sessionId]` (optional).
+- **Behavior**: Retrieves a specific session with nested turns, actions, and glossary, or the 10 most recent sessions ordered by `createdAt desc`.
+- **Response**: `{ sessions: Session[] }` or `{ session: Session }`.
+
+#### `POST /api/sessions`
+- **Payload**:
+  ```json
+  {
+    "sessionId": "cuid-or-null",
+    "title": "Sprint Planning Call",
+    "turns": [...],
+    "actions": [...],
+    "notes": [...],
+    "recaps": [...],
+    "jargon": [...]
+  }
+  ```
+- **Behavior**: Upserts session metadata, bulk updates turns, action items, and glossary entries in PostgreSQL.
+- **Response**: `{ success: true, session: Session }`.
+
 ---
 
 ## 4. Key Architectural Decisions & Rationale (ADRs)
@@ -211,6 +309,10 @@ Processes raw spoken text, cleans fillers, generates translations, extracts acti
 6. **Tactile Accessibility Instrument Design System Overhaul**:
    - *Decision*: Eliminated generic SaaS clichés (gradients, ambient glow rings, floating rounded-2xl cards, pill badges). Implemented an asymmetric 60/40 workstation layout (`border-zinc-800`, `bg-zinc-950`), a hardware-grade segmented VU-meter, a keyboard-navigable Monospace Lexicon Table, and tactile mechanical buttons.
    - *Rationale*: Neurodivergent and accessibility-focused users require high-density, high-contrast, distraction-free instruments rather than decorative aesthetics. Monospace typography ensures crisp tabular scanning for timestamps, tasks, and telemetry.
+
+7. **PostgreSQL Relational Persistence via Prisma ORM (Module 3, Step 1)**:
+   - *Decision*: Introduced `@prisma/client`, `prisma`, `@prisma/adapter-pg`, and connection pool singleton in `lib/prisma.ts`. Implemented models for `User`, `Session`, `TranscriptTurn`, `ActionItem`, and `CustomGlossary` with graceful fallback when the database is offline or unconfigured.
+   - *Rationale*: Enables meeting history rehydration across browser sessions and tab refreshes without sacrificing the ephemeral in-memory privacy defaults when offline.
 
 ---
 

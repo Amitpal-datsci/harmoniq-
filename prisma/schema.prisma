@@ -1,0 +1,76 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String       @id @default(cuid())
+  email     String       @unique
+  name      String?
+  sessions  Session[]
+  actions   ActionItem[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Session {
+  id              String           @id @default(cuid())
+  title           String           @default("Sprint Planning Call")
+  summaryRecaps   String[]         @default([])
+  simplifiedNotes String[]         @default([])
+  userId          String?
+  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  turns           TranscriptTurn[]
+  actions         ActionItem[]
+  glossary        CustomGlossary[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([createdAt])
+}
+
+model TranscriptTurn {
+  id               String   @id @default(cuid())
+  sessionId        String
+  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  speaker          String
+  role             String
+  text             String   @db.Text
+  hindiTranslation String?  @db.Text
+  timestamp        String
+  createdAt        DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model ActionItem {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  task      String
+  assignee  String   @default("Team")
+  priority  String   @default("Medium") // "High" | "Medium" | "Low"
+  due       String   @default("TBD")
+  completed Boolean  @default(false)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+}
+
+model CustomGlossary {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  term       String
+  definition String   @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([sessionId, term])
+  @@index([sessionId])
+}

@@ -52,6 +52,7 @@ import {
   Cpu,
   Layers,
   Check,
+  Database,
 } from "lucide-react";
 
 // ────────────────────────────────────────────────────────────
@@ -558,10 +559,120 @@ export default function HarmonicDashboard() {
   const [recaps, setRecaps] = useState<string[]>([]);
   const [bionicMode, setBionicMode] = useState(false);
   const [showCatchUp, setShowCatchUp] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [dbStatus, setDbStatus] = useState<"IDLE" | "SYNCING" | "SYNCED" | "OFFLINE">("IDLE");
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const simTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Sync state to PostgreSQL via /api/sessions
+  const syncSessionToDb = useCallback(
+    async (override?: {
+      turns?: TranscriptLine[];
+      actions?: ActionItem[];
+      notes?: string[];
+      recaps?: string[];
+      jargon?: JargonTerm[];
+    }) => {
+      const turnsPayload = override?.turns ?? transcript;
+      const actionsPayload = override?.actions ?? actions;
+      const notesPayload = override?.notes ?? notes;
+      const recapsPayload = override?.recaps ?? recaps;
+      const jargonPayload = override?.jargon ?? jargon;
+
+      if (turnsPayload.length === 0 && actionsPayload.length === 0) return;
+
+      setDbStatus("SYNCING");
+      try {
+        const res = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: currentSessionId,
+            title: "Sprint Planning Call",
+            turns: turnsPayload,
+            actions: actionsPayload,
+            notes: notesPayload,
+            recaps: recapsPayload,
+            jargon: jargonPayload,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.session?.id) {
+            setCurrentSessionId(data.session.id);
+          }
+          setDbStatus("SYNCED");
+          setLastSyncTime(now());
+        } else {
+          setDbStatus("OFFLINE");
+        }
+      } catch {
+        setDbStatus("OFFLINE");
+      }
+    },
+    [currentSessionId, transcript, actions, notes, recaps, jargon]
+  );
+
+  // Rehydrate latest session on mount
+  useEffect(() => {
+    async function loadLatestSession() {
+      try {
+        const res = await fetch("/api/sessions");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.sessions && data.sessions.length > 0) {
+          const latest = data.sessions[0];
+          setCurrentSessionId(latest.id);
+          if (latest.turns && latest.turns.length > 0) {
+            setTranscript(
+              latest.turns.map((t: { id: string; speaker: string; role: string; text: string; timestamp: string }) => ({
+                id: t.id,
+                speaker: t.speaker,
+                role: t.role,
+                text: t.text,
+                timestamp: t.timestamp,
+              }))
+            );
+          }
+          if (latest.actions && latest.actions.length > 0) {
+            setActions(
+              latest.actions.map((a: { id: string; task: string; assignee: string; priority: "High" | "Medium" | "Low"; due: string; completed: boolean }) => ({
+                id: a.id,
+                task: a.task,
+                assignee: a.assignee,
+                priority: a.priority,
+                due: a.due,
+                done: a.completed,
+              }))
+            );
+          }
+          if (latest.simplifiedNotes?.length) {
+            setNotes(latest.simplifiedNotes);
+          }
+          if (latest.summaryRecaps?.length) {
+            setRecaps(latest.summaryRecaps);
+          }
+          if (latest.glossary?.length) {
+            setJargon(
+              latest.glossary.map((g: { term: string; definition: string }) => ({
+                term: g.term,
+                definition: g.definition,
+              }))
+            );
+          }
+          setDbStatus("SYNCED");
+          setLastSyncTime(now());
+        }
+      } catch {
+        setDbStatus("OFFLINE");
+      }
+    }
+    loadLatestSession();
+  }, []);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -638,13 +749,18 @@ export default function HarmonicDashboard() {
         if (data.summaryRecap) {
           setRecaps((prev) => [...prev, data.summaryRecap!]);
         }
+
+        // Trigger persistence sync
+        setTimeout(() => {
+          syncSessionToDb();
+        }, 100);
       } catch {
         // Ephemeral resilience: keep local transcript intact
       } finally {
         setIsProcessing(false);
       }
     },
-    [apiKey]
+    [apiKey, syncSessionToDb]
   );
 
   // ── Microphone Controller ─────────────────────────────────
@@ -1245,6 +1361,22 @@ export default function HarmonicDashboard() {
                 )}
                 <span>NET: {networkOk ? "ONLINE" : "OFFLINE_FALLBACK"}</span>
               </div>
+
+              {/* PostgreSQL Session Persistence Status Indicator */}
+              <button
+                id="db-sync-status-btn"
+                onClick={() => syncSessionToDb()}
+                className="flex items-center gap-1.5 border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 px-2 py-1 rounded instrument-btn cursor-pointer transition-colors"
+                title={lastSyncTime ? `Last synced: ${lastSyncTime}. Click to sync now.` : "Click to sync session to PostgreSQL"}
+              >
+                <Database className={`w-3 h-3 ${dbStatus === "SYNCED" ? "text-cyan-400" : dbStatus === "SYNCING" ? "text-amber-400 animate-spin" : "text-zinc-500"}`} />
+                <span className={dbStatus === "SYNCED" ? "text-emerald-400" : dbStatus === "SYNCING" ? "text-amber-400" : "text-zinc-400"}>
+                  DB: {dbStatus}
+                </span>
+                {currentSessionId && (
+                  <span className="text-[9px] text-zinc-500">[{currentSessionId.slice(-4)}]</span>
+                )}
+              </button>
             </div>
 
             {/* Tactile Hardware Controls */}
