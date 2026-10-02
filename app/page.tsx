@@ -53,6 +53,12 @@ import {
   Layers,
   Check,
   Database,
+  Users,
+  ChevronDown,
+  FileText,
+  Loader2,
+  ListChecks,
+  Lightbulb,
 } from "lucide-react";
 
 // ────────────────────────────────────────────────────────────
@@ -90,75 +96,137 @@ interface HarmonizeData {
   summaryRecap?: string;
 }
 
+interface SummaryActionItem {
+  task: string;
+  assignee: string;
+  priority: "High" | "Medium" | "Low";
+  due: string;
+}
+
+interface MeetingSummary {
+  generatedAt: string;
+  executiveOverview: string;
+  keyDecisions: string[];
+  actionItems: SummaryActionItem[];
+  speakerParticipation: Record<string, number>;
+}
+
 // ────────────────────────────────────────────────────────────
-//  Deterministic Simulation Dataset
+//  Speaker Roster
+// ────────────────────────────────────────────────────────────
+
+export interface SpeakerProfile {
+  name: string;
+  role: string;
+  colorKey: string; // maps to SPEAKER_STYLES
+}
+
+export const SPEAKER_ROSTER: SpeakerProfile[] = [
+  { name: "Ananya",    role: "Product Lead",     colorKey: "Ananya" },
+  { name: "Rahul",     role: "Backend Engineer",  colorKey: "Rahul" },
+  { name: "Sam",       role: "Non-Speaking AAC",  colorKey: "Sam" },
+  { name: "Priya",     role: "QA / Accessibility",colorKey: "Priya" },
+  { name: "You",       role: "Live Input",        colorKey: "You" },
+];
+
+// ────────────────────────────────────────────────────────────
+//  Deterministic Simulation Dataset (6 turns, 4 speakers)
 // ────────────────────────────────────────────────────────────
 
 const SIMULATION_EVENTS = [
   {
-    delayMs: 1000,
+    delayMs: 800,
     speaker: "Ananya",
     role: "Product Lead",
-    text: "Team, we need to push the backend API release to Monday at 10 AM.",
+    text: "Team, we need to push the backend API release to Monday at 10 AM. Engineering needs the weekend to stabilise.",
     hindi: "टीम, हमें बैकेंड एपीआई रिलीज़ को सोमवार सुबह 10 बजे तक धकेलना होगा।",
     actions: [
-      {
-        task: "Reschedule backend API deployment",
-        assignee: "Rahul",
-        priority: "High" as const,
-        due: "Mon 10:00 AM",
-      },
+      { task: "Reschedule backend API deployment", assignee: "Rahul", priority: "High" as const, due: "Mon 10:00 AM" },
     ],
-    notes: [
-      "Backend API release rescheduled to Monday 10 AM",
-      "Team alignment required before the deployment window",
-    ],
+    notes: ["Backend API release rescheduled to Monday 10 AM", "Weekend buffer approved by Product Lead"],
     jargon: [
-      { term: "API", definition: "Application Programming Interface — standard communication contract." },
+      { term: "API", definition: "Application Programming Interface — standard communication contract between services." },
       { term: "BACKEND", definition: "Server-side architecture handling database queries & business logic." },
     ],
-    recap: "The backend API deployment was rescheduled to Monday 10:00 AM to give the team sufficient runway.",
+    recap: "Ananya rescheduled the backend API release to Monday 10:00 AM citing stabilisation needs.",
   },
   {
-    delayMs: 5000,
-    speaker: "Ananya",
-    role: "Product Lead",
-    text: "Rahul, please run the full load tests and verify database indexing before the deploy.",
-    hindi: "राहुल, कृपया डिप्लॉय से पहले पूरे लोड परीक्षण चलाएं और डेटाबेस इंडेक्सिंग सत्यापित करें।",
+    delayMs: 4000,
+    speaker: "Rahul",
+    role: "Backend Engineer",
+    text: "Got it. I can have load tests done by Sunday 6 PM. I'll flag Priya to verify accessibility coverage.",
+    hindi: "ठीक है। मैं रविवार शाम 6 बजे तक लोड परीक्षण पूरा कर सकता हूँ।",
     actions: [
-      {
-        task: "Execute load tests & verify DB indexes",
-        assignee: "Rahul",
-        priority: "High" as const,
-        due: "Sun 6:00 PM",
-      },
+      { task: "Execute load tests & verify DB indexes", assignee: "Rahul", priority: "High" as const, due: "Sun 6:00 PM" },
+      { task: "Coordinate accessibility coverage check", assignee: "Priya", priority: "Medium" as const, due: "Sun 8:00 PM" },
     ],
-    notes: [
-      "Load tests must pass before Monday deployment",
-      "Database indexing verification is mandatory",
-    ],
+    notes: ["Rahul owns load testing by Sunday 6 PM", "Priya to verify accessibility before deploy"],
     jargon: [
-      { term: "LOAD TEST", definition: "Simulating high concurrent traffic to evaluate performance bottlenecks." },
+      { term: "LOAD TEST", definition: "Simulating high concurrent traffic to validate system performance under stress." },
       { term: "INDEXING", definition: "Data structures optimizing lookup efficiency on relational tables." },
     ],
-    recap: "Rahul was assigned to run load tests and verify DB indexing by Sunday 6 PM before release.",
+    recap: "Rahul committed to completing load tests by Sunday 6 PM and flagged Priya for accessibility coverage.",
   },
   {
-    delayMs: 9500,
+    delayMs: 8000,
     speaker: "Sam",
     role: "Non-Speaking AAC",
-    text: "Understood. The database migration scripts are ready and validated.",
-    hindi: "समझ गया। डेटाबेस माइग्रेशन स्क्रिप्ट तैयार और सत्यापित हैं।",
+    text: "Understood. The database migration scripts are ready and validated in staging.",
+    hindi: "समझ गया। डेटाबेस माइग्रेशन स्क्रिप्ट स्टेजिंग में तैयार और सत्यापित हैं।",
     actions: [],
-    notes: [
-      "DB migration scripts confirmed ready",
-      "Sam has validated all migration steps in staging",
-    ],
+    notes: ["DB migration scripts confirmed ready in staging", "Sam validated all migration steps"],
     jargon: [
-      { term: "MIGRATION", definition: "Version-controlled DDL script transforming schema structure." },
-      { term: "DB", definition: "Database persistence layer storing structured application state." },
+      { term: "MIGRATION", definition: "Version-controlled DDL script transforming database schema structure." },
+      { term: "STAGING", definition: "Pre-production environment mirroring production configuration for final validation." },
     ],
-    recap: "Sam confirmed that all database migration scripts have been validated and are ready.",
+    recap: "Sam confirmed all database migration scripts are ready and validated in the staging environment.",
+  },
+  {
+    delayMs: 12500,
+    speaker: "Priya",
+    role: "QA / Accessibility",
+    text: "I'll run screen-reader and keyboard-nav tests on Sunday. Do we have the WCAG 2.2 checklist updated?",
+    hindi: "मैं रविवार को स्क्रीन-रीडर और कीबोर्ड-नेव परीक्षण करूंगी।",
+    actions: [
+      { task: "Update WCAG 2.2 checklist before Sunday tests", assignee: "Priya", priority: "Medium" as const, due: "Sat 5:00 PM" },
+    ],
+    notes: ["Screen-reader & keyboard-nav tests scheduled for Sunday", "WCAG 2.2 checklist must be updated first"],
+    jargon: [
+      { term: "WCAG", definition: "Web Content Accessibility Guidelines — international accessibility standard." },
+      { term: "SCREEN READER", definition: "Assistive technology converting on-screen text to synthesized speech." },
+    ],
+    recap: "Priya will run accessibility tests Sunday and requested an updated WCAG 2.2 checklist by Saturday.",
+  },
+  {
+    delayMs: 17000,
+    speaker: "Rahul",
+    role: "Backend Engineer",
+    text: "WCAG checklist is in Notion. Priya, I'll ping you the link. Also — Ananya, CI/CD pipeline is green except for one flaky integration test I'm isolating now.",
+    hindi: "WCAG चेकलिस्ट Notion में है। एनान्या, CI/CD पाइपलाइन हरी है, एक अस्थिर टेस्ट छोड़कर।",
+    actions: [
+      { task: "Isolate and fix flaky integration test", assignee: "Rahul", priority: "High" as const, due: "Sat 11:00 PM" },
+    ],
+    notes: ["CI/CD pipeline is green except one flaky integration test", "Rahul isolating the flaky test now"],
+    jargon: [
+      { term: "CI/CD", definition: "Continuous Integration / Continuous Deployment — automated build and release pipeline." },
+      { term: "FLAKY TEST", definition: "A non-deterministic test that produces inconsistent pass/fail results." },
+    ],
+    recap: "Rahul reported CI/CD is green except one flaky integration test he is actively isolating.",
+  },
+  {
+    delayMs: 22000,
+    speaker: "Ananya",
+    role: "Product Lead",
+    text: "Great. Let's do a final go/no-go call Monday at 9 AM. Everyone confirm availability.",
+    hindi: "बढ़िया। सोमवार सुबह 9 बजे फाइनल गो/नो-गो कॉल करते हैं। सब उपलब्धता की पुष्टि करें।",
+    actions: [
+      { task: "Confirm go/no-go call attendance for Monday 9 AM", assignee: "Team", priority: "Medium" as const, due: "Sun 9:00 PM" },
+    ],
+    notes: ["Final go/no-go call scheduled Monday 9 AM", "All team members must confirm availability"],
+    jargon: [
+      { term: "GO/NO-GO", definition: "Decision checkpoint determining whether a release should proceed or be halted." },
+    ],
+    recap: "Ananya scheduled a final go/no-go call for Monday 9 AM and asked all team members to confirm availability.",
   },
 ];
 
@@ -185,18 +253,46 @@ const PRIORITY_TAGS: Record<string, string> = {
   Low: "border-emerald-800/80 bg-emerald-950/50 text-emerald-300",
 };
 
-const SPEAKER_STYLES: Record<string, { tag: string; border: string }> = {
-  Ananya: { tag: "text-purple-300 bg-purple-950/40 border-purple-800/70", border: "border-purple-900/40" },
-  Rahul: { tag: "text-cyan-300 bg-cyan-950/40 border-cyan-800/70", border: "border-cyan-900/40" },
-  Sam: { tag: "text-emerald-300 bg-emerald-950/40 border-emerald-800/70", border: "border-emerald-900/40" },
-  "Sam (AAC)": { tag: "text-emerald-300 bg-emerald-950/40 border-emerald-800/70", border: "border-emerald-900/40" },
-  Priya: { tag: "text-rose-300 bg-rose-950/40 border-rose-800/70", border: "border-rose-900/40" },
-  Alex: { tag: "text-amber-300 bg-amber-950/40 border-amber-800/70", border: "border-amber-900/40" },
-  You: { tag: "text-sky-300 bg-sky-950/40 border-sky-800/70", border: "border-sky-900/40" },
+const SPEAKER_STYLES: Record<string, {
+  tag: string;       // badge classes (bg, text, border)
+  border: string;    // card left accent border
+  accent: string;    // left accent bar color
+  active: string;    // active speaker ring
+}> = {
+  Ananya:      { tag: "text-purple-300 bg-purple-950/40 border-purple-800/70", border: "border-l-purple-600/70",  accent: "bg-purple-600", active: "ring-purple-600/50" },
+  Rahul:       { tag: "text-cyan-300   bg-cyan-950/40   border-cyan-800/70",   border: "border-l-cyan-500/70",    accent: "bg-cyan-500",   active: "ring-cyan-500/50" },
+  Sam:         { tag: "text-emerald-300 bg-emerald-950/40 border-emerald-800/70", border: "border-l-emerald-500/70", accent: "bg-emerald-500", active: "ring-emerald-500/50" },
+  "Sam (AAC)": { tag: "text-emerald-300 bg-emerald-950/40 border-emerald-800/70", border: "border-l-emerald-500/70", accent: "bg-emerald-500", active: "ring-emerald-500/50" },
+  Priya:       { tag: "text-rose-300   bg-rose-950/40   border-rose-800/70",   border: "border-l-rose-500/70",     accent: "bg-rose-500",   active: "ring-rose-500/50" },
+  Alex:        { tag: "text-amber-300  bg-amber-950/40  border-amber-800/70",  border: "border-l-amber-500/70",    accent: "bg-amber-500",  active: "ring-amber-500/50" },
+  You:         { tag: "text-sky-300    bg-sky-950/40    border-sky-800/70",    border: "border-l-sky-500/70",      accent: "bg-sky-500",    active: "ring-sky-500/50" },
 };
 
+const DEFAULT_SPEAKER_STYLE = {
+  tag: "text-zinc-300 bg-zinc-800/60 border-zinc-700",
+  border: "border-l-zinc-600/50",
+  accent: "bg-zinc-600",
+  active: "ring-zinc-600/40",
+};
+
+// Hex colours for canvas rendering — must stay in sync with SPEAKER_STYLES
+export const SPEAKER_HEX: Record<string, string> = {
+  Ananya:      "#a78bfa", // purple-400
+  Rahul:       "#22d3ee", // cyan-400
+  Sam:         "#34d399", // emerald-400
+  "Sam (AAC)": "#34d399",
+  Priya:       "#fb7185", // rose-400
+  Alex:        "#fbbf24", // amber-400
+  You:         "#38bdf8", // sky-400
+};
+const DEFAULT_HEX = "#71717a"; // zinc-500
+
+function getSpeakerHex(name: string): string {
+  return SPEAKER_HEX[name] ?? DEFAULT_HEX;
+}
+
 function getSpeakerStyle(name: string) {
-  return SPEAKER_STYLES[name] ?? { tag: "text-zinc-300 bg-zinc-800/60 border-zinc-700", border: "border-zinc-800" };
+  return SPEAKER_STYLES[name] ?? DEFAULT_SPEAKER_STYLE;
 }
 
 function BionicText({ text }: { text: string }) {
@@ -217,63 +313,146 @@ function BionicText({ text }: { text: string }) {
 }
 
 // ────────────────────────────────────────────────────────────
-//  Tactile Instrument VU Meter
+//  Real-Time Audio Waveform Visualizer
+//  — uses Web Audio AnalyserNode when mic is live
+//  — deterministic sine-composite animation during simulation
+//  — tints bars + oscilloscope to the active speaker's colour
 // ────────────────────────────────────────────────────────────
 
-function HardwareVuMeter({ active }: { active: boolean }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
-  const frameRef = useRef(0);
+function HardwareVuMeter({
+  active,
+  analyserNode,
+  speakerColor,
+}: {
+  active: boolean;
+  analyserNode: AnalyserNode | null;
+  speakerColor: string;
+}) {
+  const barsCanvasRef  = useRef<HTMLCanvasElement>(null);
+  const waveCanvasRef  = useRef<HTMLCanvasElement>(null);
+  const animRef        = useRef<number>(0);
+  const frameRef       = useRef(0);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const barsCanvas = barsCanvasRef.current;
+    const waveCanvas = waveCanvasRef.current;
+    if (!barsCanvas || !waveCanvas) return;
+    const bCtx = barsCanvas.getContext("2d");
+    const wCtx = waveCanvas.getContext("2d");
+    if (!bCtx || !wCtx) return;
 
-    const W = canvas.width;
-    const H = canvas.height;
-    const bars = 32;
-    const barW = Math.floor(W / bars) - 2;
+    const W    = barsCanvas.width;   // shared logical width
+    const BH   = barsCanvas.height;  // bar canvas height
+    const WH   = waveCanvas.height;  // wave canvas height
+    const bars = 48;
+    const barW = Math.floor(W / bars) - 1;
+
+    // Frequency buffer for AnalyserNode
+    const freqData = analyserNode
+      ? new Uint8Array(analyserNode.frequencyBinCount)
+      : null;
+    const timeData = analyserNode
+      ? new Uint8Array(analyserNode.frequencyBinCount)
+      : null;
+
+    // Parse speaker colour to r,g,b for alpha compositing
+    let cr = 99, cg = 102, cb = 241; // indigo fallback
+    const m = speakerColor.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (m) { cr = parseInt(m[1], 16); cg = parseInt(m[2], 16); cb = parseInt(m[3], 16); }
 
     function draw() {
-      if (!ctx) return;
       frameRef.current++;
-      ctx.fillStyle = "#09090b";
-      ctx.fillRect(0, 0, W, H);
+      const f = frameRef.current;
 
-      // Draw subtle grid lines
-      ctx.strokeStyle = "#27272a";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, H * 0.25);
-      ctx.lineTo(W, H * 0.25);
-      ctx.moveTo(0, H * 0.5);
-      ctx.lineTo(W, H * 0.5);
-      ctx.moveTo(0, H * 0.75);
-      ctx.lineTo(W, H * 0.75);
-      ctx.stroke();
+      // ── Bar graph (frequency spectrum) ──────────────────────
+      if (bCtx) {
+        bCtx.fillStyle = "#09090b";
+        bCtx.fillRect(0, 0, W, BH);
 
-      for (let i = 0; i < bars; i++) {
-        const t = frameRef.current / 8 + i * 0.35;
-        const amp = active
-          ? 0.25 + 0.75 * Math.abs(Math.sin(t) * Math.cos(t * 0.8 + i * 0.25))
-          : 0.08 + 0.04 * Math.sin(t);
-        const h = amp * H;
-        const x = i * (barW + 2);
-        const y = H - h;
+        // Grid lines
+        bCtx.strokeStyle = "rgba(39,39,42,0.8)";
+        bCtx.lineWidth = 1;
+        [0.25, 0.5, 0.75].forEach((p) => {
+          bCtx.beginPath();
+          bCtx.moveTo(0, BH * p);
+          bCtx.lineTo(W, BH * p);
+          bCtx.stroke();
+        });
 
-        // Distinct discrete segmented meter: Emerald -> Amber -> Red peak
-        const ratio = amp;
-        if (ratio > 0.85) {
-          ctx.fillStyle = "#ef4444"; // Red (Peak/Clip)
-        } else if (ratio > 0.6) {
-          ctx.fillStyle = "#f59e0b"; // Amber (Warning)
-        } else {
-          ctx.fillStyle = active ? "#10b981" : "#3f3f46"; // Emerald (Normal signal)
+        for (let i = 0; i < bars; i++) {
+          let amp: number;
+          if (freqData && analyserNode) {
+            analyserNode.getByteFrequencyData(freqData);
+            // Map bar index to a relevant portion of the freq bins
+            const binIndex = Math.floor((i / bars) * (freqData.length * 0.7));
+            amp = freqData[binIndex] / 255;
+          } else {
+            const t = f / 7 + i * 0.32;
+            amp = active
+              ? 0.18 + 0.82 * Math.abs(Math.sin(t) * Math.cos(t * 0.75 + i * 0.28))
+              : 0.05 + 0.04 * Math.sin(t * 0.5);
+          }
+
+          const h = amp * BH;
+          const x = i * (barW + 1);
+          const y = BH - h;
+
+          // Colour zones: speaker accent → amber warning → red clip
+          if (amp > 0.88) {
+            bCtx.fillStyle = "#ef4444";
+          } else if (amp > 0.65) {
+            bCtx.fillStyle = `rgba(251,191,36,${0.7 + amp * 0.3})`;
+          } else if (active) {
+            bCtx.fillStyle = `rgba(${cr},${cg},${cb},${0.55 + amp * 0.45})`;
+          } else {
+            bCtx.fillStyle = "#3f3f46";
+          }
+          bCtx.fillRect(x, y, barW, h);
+
+          // Peak cap highlight
+          if (active && amp > 0.08) {
+            bCtx.fillStyle = `rgba(${cr},${cg},${cb},0.9)`;
+            bCtx.fillRect(x, y, barW, 1);
+          }
         }
+      }
 
-        ctx.fillRect(x, y, barW, h);
+      // ── Oscilloscope (time-domain waveform) ─────────────────
+      if (wCtx) {
+        wCtx.clearRect(0, 0, W, WH);
+
+        wCtx.lineWidth   = 1.5;
+        wCtx.strokeStyle = active
+          ? `rgba(${cr},${cg},${cb},0.9)`
+          : "rgba(63,63,70,0.6)";
+        wCtx.shadowColor = active
+          ? `rgba(${cr},${cg},${cb},0.4)`
+          : "transparent";
+        wCtx.shadowBlur  = active ? 6 : 0;
+
+        wCtx.beginPath();
+        const sliceW = W / bars;
+
+        for (let i = 0; i <= bars; i++) {
+          let v: number;
+          if (timeData && analyserNode) {
+            analyserNode.getByteTimeDomainData(timeData);
+            const binIdx = Math.floor((i / bars) * timeData.length);
+            v = (timeData[binIdx] - 128) / 128; // -1..+1
+          } else {
+            const t = f / 9 + i * 0.22;
+            v = active
+              ? 0.55 * Math.sin(t) * Math.cos(t * 0.65 + i * 0.18) +
+                0.15 * Math.sin(t * 2.3 + i * 0.4)
+              : 0.04 * Math.sin(t * 0.6);
+          }
+
+          const x = i * sliceW;
+          const y = WH / 2 - v * (WH / 2 - 2);
+          i === 0 ? wCtx.moveTo(x, y) : wCtx.lineTo(x, y);
+        }
+        wCtx.stroke();
+        wCtx.shadowBlur = 0;
       }
 
       animRef.current = requestAnimationFrame(draw);
@@ -281,28 +460,49 @@ function HardwareVuMeter({ active }: { active: boolean }) {
 
     animRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animRef.current);
-  }, [active]);
+  }, [active, analyserNode, speakerColor]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dbLabel = active ? "-3.2 dB" : "NOISE_FLOOR";
 
   return (
-    <div className="border border-zinc-800 bg-zinc-950 p-2 rounded">
-      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mb-1 px-1">
-        <span>AUDIO SPECTRUM // 48kHz</span>
-        <span className={active ? "text-emerald-400 font-bold" : "text-zinc-600"}>
-          {active ? "SIGNAL: -3.2 dB" : "SIGNAL: NOISE_FLOOR"}
+    <div className="border border-zinc-800 bg-zinc-950 p-2 rounded space-y-1">
+      {/* Oscilloscope strip */}
+      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 px-1">
+        <span className="text-zinc-600">WAVEFORM // TIME DOMAIN</span>
+        <span className={active ? "font-bold" : "text-zinc-600"}
+              style={{ color: active ? speakerColor : undefined }}>
+          {active ? "● LIVE" : "○ IDLE"}
         </span>
       </div>
       <canvas
-        ref={canvasRef}
+        ref={waveCanvasRef}
         width={380}
-        height={46}
-        className="w-full h-11 block rounded-none"
+        height={28}
+        className="w-full block"
+        style={{ height: "28px" }}
       />
-      <div className="flex justify-between text-[9px] font-mono text-zinc-600 mt-1 px-1">
+
+      {/* Frequency bar spectrum */}
+      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 px-1 pt-0.5">
+        <span>SPECTRUM // FREQ DOMAIN</span>
+        <span className={active ? "font-bold" : "text-zinc-600"}
+              style={{ color: active ? speakerColor : undefined }}>
+          SIGNAL: {dbLabel}
+        </span>
+      </div>
+      <canvas
+        ref={barsCanvasRef}
+        width={380}
+        height={44}
+        className="w-full block"
+        style={{ height: "44px" }}
+      />
+      <div className="flex justify-between text-[9px] font-mono text-zinc-700 px-1">
         <span>-48dB</span>
         <span>-24dB</span>
         <span>-12dB</span>
         <span>-6dB</span>
-        <span className="text-red-500/80">0dB [CLIP]</span>
+        <span className="text-red-600/70">0dB</span>
       </div>
     </div>
   );
@@ -562,10 +762,20 @@ export default function HarmonicDashboard() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [dbStatus, setDbStatus] = useState<"IDLE" | "SYNCING" | "SYNCED" | "OFFLINE">("IDLE");
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  // Active speaker for mic attribution
+  const [activeSpeaker, setActiveSpeaker] = useState<SpeakerProfile>(SPEAKER_ROSTER[4]); // default: "You"
+  const [speakerMenuOpen, setSpeakerMenuOpen] = useState(false);
+  // Meeting Summary
+  const [meetingSummary, setMeetingSummary] = useState<MeetingSummary | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const transcriptEndRef = useRef<HTMLDivElement>(null);
-  const simTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const recognitionRef    = useRef<SpeechRecognitionInstance | null>(null);
+  const transcriptEndRef  = useRef<HTMLDivElement>(null);
+  const simTimersRef      = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const mediaStreamRef    = useRef<MediaStream | null>(null);
+  const audioCtxRef       = useRef<AudioContext | null>(null);
+  const analyserRef       = useRef<AnalyserNode | null>(null);
+  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
   // Sync state to PostgreSQL via /api/sessions
   const syncSessionToDb = useCallback(
@@ -790,6 +1000,24 @@ export default function HarmonicDashboard() {
     rec.onstart = () => {
       setIsListening(true);
       setWaveActive(true);
+      // Boot Web Audio analyser for real frequency data
+      if (typeof window !== "undefined" && navigator.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true, video: false })
+          .then((stream) => {
+            mediaStreamRef.current = stream;
+            const ctx = new AudioContext();
+            audioCtxRef.current = ctx;
+            const source  = ctx.createMediaStreamSource(stream);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.8;
+            source.connect(analyser);
+            analyserRef.current = analyser;
+            setAnalyserNode(analyser);
+          })
+          .catch(() => { /* Permission denied — visualiser runs in synth mode */ });
+      }
     };
 
     rec.onresult = (event: SpeechRecognitionEvent) => {
@@ -799,23 +1027,28 @@ export default function HarmonicDashboard() {
         .join(" ")
         .trim();
       if (finalText) {
-        processText(finalText, "You", "Hardware Input");
+        processText(finalText, activeSpeaker.name, activeSpeaker.role);
       }
     };
 
-    rec.onerror = () => {
+    const teardownAudio = () => {
       setIsListening(false);
       setWaveActive(false);
+      // Release Web Audio resources
+      mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+      audioCtxRef.current?.close();
+      audioCtxRef.current = null;
+      analyserRef.current  = null;
+      setAnalyserNode(null);
     };
 
-    rec.onend = () => {
-      setIsListening(false);
-      setWaveActive(false);
-    };
+    rec.onerror = teardownAudio;
+    rec.onend   = teardownAudio;
 
     recognitionRef.current = rec;
     rec.start();
-  }, [isListening, processText]);
+  }, [isListening, processText, activeSpeaker]);
 
   // ── Deterministic Simulation Runner ───────────────────────
   const runSimulation = useCallback(() => {
@@ -922,6 +1155,37 @@ export default function HarmonicDashboard() {
     );
   };
 
+  // ── Meeting Summarizer ────────────────────────────────────────
+  const generateSummary = useCallback(async () => {
+    if (transcript.length === 0 || isSummarizing) return;
+    setIsSummarizing(true);
+    try {
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiKey ? { "x-gemini-key": apiKey } : {}),
+        },
+        body: JSON.stringify({
+          turns: transcript.map((t) => ({
+            speaker: t.speaker,
+            role: t.role,
+            text: t.text,
+            timestamp: t.timestamp,
+          })),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.summary) setMeetingSummary(data.summary as MeetingSummary);
+      }
+    } catch {
+      // Network failure — surface nothing; user can retry
+    } finally {
+      setIsSummarizing(false);
+    }
+  }, [transcript, isSummarizing, apiKey]);
+
   // ────────────────────────────────────────────────────────────
   //  Component: Primary Live Audio & Diarized Transcript Panel
   // ────────────────────────────────────────────────────────────
@@ -957,42 +1221,56 @@ export default function HarmonicDashboard() {
       }
     >
       <div className="space-y-3">
-        <HardwareVuMeter active={waveActive || isListening || isSimulating} />
+        <HardwareVuMeter
+          active={waveActive || isListening || isSimulating}
+          analyserNode={analyserNode}
+          speakerColor={getSpeakerHex(activeSpeaker.name)}
+        />
 
         {/* Diarized Transcript Feed */}
-        <div className="space-y-2 h-64 sm:h-72 lg:h-80 overflow-y-auto pr-1 custom-scrollbar">
+        <div className="space-y-1.5 h-64 sm:h-72 lg:h-80 overflow-y-auto pr-1 custom-scrollbar">
           {transcript.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-6">
-              <Mic className="w-5 h-5 text-zinc-600" />
+              <Users className="w-5 h-5 text-zinc-600" />
               <span>AWAITING AUDIO FRAMES. TOGGLE MIC OR RUN SIMULATION.</span>
             </div>
           )}
 
           {transcript.map((line) => {
             const style = getSpeakerStyle(line.speaker);
+            const isActive = line.speaker === activeSpeaker.name;
             return (
               <div
                 key={line.id}
-                className={`p-2.5 rounded bg-zinc-950/70 border ${style.border} transition-colors animate-fade-in-up`}
+                className={`flex gap-0 rounded overflow-hidden border border-zinc-800/60 bg-zinc-950/80 transition-all animate-fade-in-up ${
+                  isActive ? `ring-1 ${style.active}` : ""
+                }`}
               >
-                <div className="flex items-center justify-between text-xs font-mono mb-1.5 pb-1 border-b border-zinc-800/60">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.2 rounded border ${style.tag}`}
-                    >
-                      {line.speaker}
-                    </span>
-                    <span className="text-[11px] text-zinc-500 font-mono">
-                      // {line.role}
+                {/* Left accent bar */}
+                <div className={`w-1 shrink-0 ${style.accent} opacity-80`} />
+                <div className="flex-1 p-2.5">
+                  <div className="flex items-center justify-between text-xs font-mono mb-1.5 pb-1 border-b border-zinc-800/60">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${style.tag}`}>
+                        {line.speaker}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        {line.role}
+                      </span>
+                      {isActive && (
+                        <span className="text-[9px] font-mono text-zinc-600 border border-zinc-800 px-1 rounded bg-zinc-900">
+                          ACTIVE_MIC
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
+                      [{line.timestamp}]
                     </span>
                   </div>
-                  <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
-                    [{line.timestamp}]
-                  </span>
+                  <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-sans">
+                    {bionicMode ? <BionicText text={line.text} /> : line.text}
+                  </p>
                 </div>
-                <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-sans">
-                  {bionicMode ? <BionicText text={line.text} /> : line.text}
-                </p>
               </div>
             );
           })}
@@ -1229,6 +1507,172 @@ export default function HarmonicDashboard() {
   );
 
   // ────────────────────────────────────────────────────────────
+  //  Component: Meeting Summarizer Panel
+  // ────────────────────────────────────────────────────────────
+
+  const PRIORITY_SUMMARY_TAGS: Record<string, string> = {
+    High:   "text-red-300    bg-red-950/50    border-red-800/80",
+    Medium: "text-amber-300  bg-amber-950/50  border-amber-800/80",
+    Low:    "text-emerald-300 bg-emerald-950/50 border-emerald-800/80",
+  };
+
+  const cardSummary = (
+    <InstrumentPanel
+      id="panel-meeting-summary"
+      title="Meeting Summary // Intelligence"
+      icon={FileText}
+      badge={
+        meetingSummary ? (
+          <span className="font-mono text-[10px] text-violet-400 bg-violet-950/50 border border-violet-800 px-1.5 py-0.5 rounded">
+            GENERATED
+          </span>
+        ) : (
+          <span className="font-mono text-[10px] text-zinc-500 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
+            ON-DEMAND
+          </span>
+        )
+      }
+    >
+      <div className="space-y-3">
+        {/* Trigger button */}
+        <button
+          id="generate-summary-btn"
+          onClick={generateSummary}
+          disabled={isSummarizing || transcript.length === 0}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded border border-violet-700/70 bg-violet-950/30 hover:bg-violet-900/40 text-violet-300 font-mono text-xs uppercase tracking-wider instrument-btn transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label="Generate meeting summary"
+        >
+          {isSummarizing ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>SYNTHESISING INTELLIGENCE...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Generate Meeting Summary</span>
+            </>
+          )}
+        </button>
+
+        {/* Empty / no transcript yet */}
+        {!isSummarizing && !meetingSummary && transcript.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-32 text-zinc-600 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-4">
+            <FileText className="w-5 h-5 text-zinc-700" />
+            <span>RUN SIMULATION OR CAPTURE AUDIO TO ENABLE SUMMARY</span>
+          </div>
+        )}
+
+        {/* Shimmer loading skeleton */}
+        {isSummarizing && (
+          <div className="space-y-2 animate-pulse">
+            {["w-full", "w-5/6", "w-4/6"].map((w, i) => (
+              <div key={i} className={`h-3 ${w} bg-zinc-800 rounded`} />
+            ))}
+            <div className="h-px bg-zinc-800 my-2" />
+            {["w-3/4", "w-5/6", "w-2/3"].map((w, i) => (
+              <div key={i} className={`h-3 ${w} bg-zinc-800 rounded`} />
+            ))}
+          </div>
+        )}
+
+        {/* Rendered summary */}
+        {!isSummarizing && meetingSummary && (
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-1 custom-scrollbar animate-fade-in-up">
+
+            {/* Timestamp */}
+            <div className="text-[10px] font-mono text-zinc-500 flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              <span>Generated: {new Date(meetingSummary.generatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}</span>
+              {Object.keys(meetingSummary.speakerParticipation).length > 0 && (
+                <>
+                  <span className="text-zinc-700">|</span>
+                  <Users className="w-3 h-3" />
+                  <span>
+                    {Object.entries(meetingSummary.speakerParticipation)
+                      .map(([spk, n]) => `${spk}:${n}`)
+                      .join(" · ")}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* § 1 Executive Overview */}
+            <div className="border border-zinc-800 rounded bg-zinc-950/70">
+              <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 text-[10px] font-mono uppercase tracking-wider text-violet-400">
+                <Lightbulb className="w-3 h-3" />
+                <span>§1 Executive Overview</span>
+              </div>
+              <p className="px-3 py-2.5 text-xs text-zinc-200 font-sans leading-relaxed">
+                {meetingSummary.executiveOverview}
+              </p>
+            </div>
+
+            {/* § 2 Key Decisions */}
+            {meetingSummary.keyDecisions.length > 0 && (
+              <div className="border border-zinc-800 rounded bg-zinc-950/70">
+                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 text-[10px] font-mono uppercase tracking-wider text-cyan-400">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>§2 Key Decisions</span>
+                  <span className="text-zinc-600 ml-auto">[{meetingSummary.keyDecisions.length}]</span>
+                </div>
+                <ul className="divide-y divide-zinc-800/60">
+                  {meetingSummary.keyDecisions.map((d, i) => (
+                    <li key={i} className="flex items-start gap-2 px-3 py-2 text-xs text-zinc-200 font-sans">
+                      <ChevronRight className="w-3 h-3 text-cyan-600 shrink-0 mt-0.5" />
+                      <span className="leading-relaxed">{d}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* § 3 Action Items */}
+            {meetingSummary.actionItems.length > 0 && (
+              <div className="border border-zinc-800 rounded bg-zinc-950/70">
+                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 text-[10px] font-mono uppercase tracking-wider text-amber-400">
+                  <ListChecks className="w-3 h-3" />
+                  <span>§3 Action Items</span>
+                  <span className="text-zinc-600 ml-auto">[{meetingSummary.actionItems.length}]</span>
+                </div>
+                <div className="divide-y divide-zinc-800/60">
+                  {meetingSummary.actionItems.map((item, i) => (
+                    <div key={i} className="px-3 py-2 text-xs font-mono">
+                      <p className="text-zinc-200 font-sans text-xs leading-snug mb-1.5">{item.task}</p>
+                      <div className="flex items-center gap-2 flex-wrap text-[10px]">
+                        <span className="px-1.5 py-0.5 rounded border border-zinc-700 bg-zinc-800 text-zinc-300">
+                          @{item.assignee}
+                        </span>
+                        <span className={`px-1.5 py-0.5 rounded border ${PRIORITY_SUMMARY_TAGS[item.priority] ?? "text-zinc-400 border-zinc-700"}`}>
+                          [{item.priority.toUpperCase()}]
+                        </span>
+                        <span className="text-zinc-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />{item.due}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Regenerate */}
+            <button
+              id="regenerate-summary-btn"
+              onClick={generateSummary}
+              disabled={isSummarizing}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 font-mono text-[11px] uppercase tracking-wider instrument-btn transition-colors disabled:opacity-40"
+            >
+              <Loader2 className="w-3 h-3" />
+              Regenerate
+            </button>
+          </div>
+        )}
+      </div>
+    </InstrumentPanel>
+  );
+
+  // ────────────────────────────────────────────────────────────
   //  Layout Orchestration
   // ────────────────────────────────────────────────────────────
 
@@ -1244,6 +1688,7 @@ export default function HarmonicDashboard() {
           {/* Secondary Focus: 40% Screen Weight */}
           <div className="lg:col-span-5 space-y-4">
             {cardActions}
+            {cardSummary}
             {cardHindi}
           </div>
         </div>
@@ -1343,7 +1788,7 @@ export default function HarmonicDashboard() {
             </div>
 
             {/* Hardware Status Indicators */}
-            <div className="hidden sm:flex items-center gap-3 text-[11px] font-mono text-zinc-400">
+            <div className="hidden sm:flex items-center gap-3 text-[11px] font-mono text-zinc-400 flex-wrap">
               <div className="flex items-center gap-1.5 border border-zinc-800 bg-zinc-900 px-2 py-1 rounded">
                 <span
                   className={`w-1.5 h-1.5 rounded-none ${
@@ -1362,7 +1807,7 @@ export default function HarmonicDashboard() {
                 <span>NET: {networkOk ? "ONLINE" : "OFFLINE_FALLBACK"}</span>
               </div>
 
-              {/* PostgreSQL Session Persistence Status Indicator */}
+              {/* PostgreSQL Session Sync Status */}
               <button
                 id="db-sync-status-btn"
                 onClick={() => syncSessionToDb()}
@@ -1377,6 +1822,57 @@ export default function HarmonicDashboard() {
                   <span className="text-[9px] text-zinc-500">[{currentSessionId.slice(-4)}]</span>
                 )}
               </button>
+
+              {/* Active Speaker Switcher */}
+              <div className="relative">
+                <button
+                  id="speaker-switcher-btn"
+                  onClick={() => setSpeakerMenuOpen((v) => !v)}
+                  className={`flex items-center gap-1.5 border px-2 py-1 rounded instrument-btn cursor-pointer transition-colors ${
+                    getSpeakerStyle(activeSpeaker.name).tag
+                  } border-zinc-700 hover:bg-zinc-800`}
+                  aria-label="Switch active speaker"
+                  aria-expanded={speakerMenuOpen}
+                >
+                  <Users className="w-3 h-3" />
+                  <span className="font-bold uppercase tracking-wider">{activeSpeaker.name}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${speakerMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {speakerMenuOpen && (
+                  <div
+                    className="absolute top-full left-0 mt-1 z-40 bg-zinc-900 border border-zinc-700 rounded shadow-2xl min-w-[180px] py-1 animate-fade-in-up"
+                    role="listbox"
+                    aria-label="Speaker selection"
+                  >
+                    {SPEAKER_ROSTER.map((sp) => {
+                      const s = getSpeakerStyle(sp.name);
+                      const isSelected = sp.name === activeSpeaker.name;
+                      return (
+                        <button
+                          key={sp.name}
+                          id={`speaker-opt-${sp.name.toLowerCase()}`}
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => {
+                            setActiveSpeaker(sp);
+                            setSpeakerMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-1.5 text-left text-xs font-mono hover:bg-zinc-800 transition-colors ${
+                            isSelected ? "bg-zinc-800/80" : ""
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-none ${s.accent}`} />
+                            <span className={s.tag.split(" ")[0]}>{sp.name.toUpperCase()}</span>
+                          </div>
+                          <span className="text-zinc-500 text-[10px]">{sp.role}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Tactile Hardware Controls */}
