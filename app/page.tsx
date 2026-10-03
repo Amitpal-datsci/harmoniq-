@@ -25,7 +25,7 @@ type WindowWithSpeech = typeof globalThis & {
   webkitSpeechRecognition?: SpeechRecognitionConstructor;
 };
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Mic,
   MicOff,
@@ -59,6 +59,8 @@ import {
   Loader2,
   ListChecks,
   Lightbulb,
+  BarChart2,
+  Mic2,
 } from "lucide-react";
 
 // ────────────────────────────────────────────────────────────
@@ -109,6 +111,17 @@ interface MeetingSummary {
   keyDecisions: string[];
   actionItems: SummaryActionItem[];
   speakerParticipation: Record<string, number>;
+}
+
+interface TalkTimeStat {
+  name: string;
+  role: string;
+  turns: number;
+  words: number;
+  pct: number;           // 0–100 share of total words
+  hex: string;           // canvas/inline colour
+  accentClass: string;   // Tailwind bg class for progress bar fill
+  tagClass: string;      // Tailwind text+bg+border classes for badge
 }
 
 // ────────────────────────────────────────────────────────────
@@ -768,6 +781,38 @@ export default function HarmonicDashboard() {
   // Meeting Summary
   const [meetingSummary, setMeetingSummary] = useState<MeetingSummary | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // ── Live Talk-Time Analytics (derived, not stored state) ──
+  const talkTimeStats = useMemo<TalkTimeStat[]>(() => {
+    if (transcript.length === 0) return [];
+
+    // Aggregate word count and turn count per speaker
+    const agg: Record<string, { turns: number; words: number; role: string }> = {};
+    for (const line of transcript) {
+      const key = line.speaker;
+      if (!agg[key]) agg[key] = { turns: 0, words: 0, role: line.role };
+      agg[key].turns += 1;
+      agg[key].words += line.text.trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    const totalWords = Object.values(agg).reduce((s, v) => s + v.words, 0);
+
+    return Object.entries(agg)
+      .sort(([, a], [, b]) => b.words - a.words) // descending by word count
+      .map(([name, data]) => {
+        const style = getSpeakerStyle(name);
+        return {
+          name,
+          role: data.role,
+          turns: data.turns,
+          words: data.words,
+          pct: totalWords > 0 ? Math.round((data.words / totalWords) * 100) : 0,
+          hex: getSpeakerHex(name),
+          accentClass: style.accent,
+          tagClass: style.tag,
+        };
+      });
+  }, [transcript]);
 
   const recognitionRef    = useRef<SpeechRecognitionInstance | null>(null);
   const transcriptEndRef  = useRef<HTMLDivElement>(null);
@@ -1507,6 +1552,146 @@ export default function HarmonicDashboard() {
   );
 
   // ────────────────────────────────────────────────────────────
+  //  Component: Speaker Talk-Time & Participation Analytics
+  // ────────────────────────────────────────────────────────────
+
+  const cardAnalytics = (
+    <InstrumentPanel
+      id="panel-analytics"
+      title="Talk-Time Analytics // Participation"
+      icon={BarChart2}
+      badge={
+        <span className="font-mono text-[10px] text-sky-400 bg-sky-950/50 border border-sky-800 px-1.5 py-0.5 rounded">
+          {talkTimeStats.length > 0 ? `${talkTimeStats.length} SPEAKERS` : "IDLE"}
+        </span>
+      }
+    >
+      {talkTimeStats.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-28 text-zinc-600 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-4">
+          <Mic2 className="w-5 h-5 text-zinc-700" />
+          <span>RUN SIMULATION OR CAPTURE AUDIO TO POPULATE ANALYTICS</span>
+        </div>
+      ) : (
+        <div className="space-y-3">
+
+          {/* ── Stacked dominance bar ── */}
+          <div>
+            <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mb-1.5">
+              <span>WORD SHARE // DOMINANCE MAP</span>
+              <span className="text-zinc-600">
+                {talkTimeStats.reduce((s, t) => s + t.words, 0)} WORDS TOTAL
+              </span>
+            </div>
+            <div className="flex h-3 rounded overflow-hidden border border-zinc-800 bg-zinc-900">
+              {talkTimeStats.map((stat) => (
+                <div
+                  key={stat.name}
+                  className={`${stat.accentClass} transition-all duration-700 ease-out`}
+                  style={{ width: `${stat.pct}%`, opacity: 0.85 }}
+                  title={`${stat.name}: ${stat.pct}%`}
+                />
+              ))}
+            </div>
+            {/* Legend row */}
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              {talkTimeStats.map((stat) => (
+                <div key={stat.name} className="flex items-center gap-1 text-[10px] font-mono">
+                  <span
+                    className={`w-2 h-2 rounded-none ${stat.accentClass}`}
+                    style={{ opacity: 0.85 }}
+                  />
+                  <span className="text-zinc-400">{stat.name}</span>
+                  <span className="text-zinc-600">{stat.pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Per-speaker rows ── */}
+          <div className="space-y-2">
+            {talkTimeStats.map((stat, idx) => {
+              const isTop = idx === 0;
+              return (
+                <div
+                  key={stat.name}
+                  className={`rounded border bg-zinc-950/80 overflow-hidden transition-all animate-fade-in-up ${
+                    isTop ? "border-zinc-600/70" : "border-zinc-800/60"
+                  }`}
+                >
+                  {/* Header row */}
+                  <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-zinc-800/60">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${stat.tagClass}`}>
+                        {stat.name}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-mono">{stat.role}</span>
+                      {isTop && (
+                        <span className="text-[9px] font-mono text-zinc-600 border border-zinc-800 px-1 rounded bg-zinc-900">
+                          LEAD
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className="text-[11px] font-mono font-bold tabular-nums"
+                      style={{ color: stat.hex }}
+                    >
+                      {stat.pct}%
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="px-2.5 pt-2 pb-0.5">
+                    <div className="h-1.5 bg-zinc-900 rounded-none overflow-hidden">
+                      <div
+                        className={`h-full ${stat.accentClass} transition-all duration-700 ease-out`}
+                        style={{ width: `${stat.pct}%`, opacity: 0.8 }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Telemetry row */}
+                  <div className="flex items-center gap-3 px-2.5 py-1.5 text-[10px] font-mono text-zinc-500">
+                    <div className="flex items-center gap-1">
+                      <Mic2 className="w-3 h-3 text-zinc-600" />
+                      <span>
+                        <span className="text-zinc-300 tabular-nums">{stat.turns}</span>
+                        {" "}TURN{stat.turns !== 1 ? "S" : ""}
+                      </span>
+                    </div>
+                    <div className="w-px h-3 bg-zinc-800" />
+                    <div className="flex items-center gap-1">
+                      <span>
+                        <span className="text-zinc-300 tabular-nums">{stat.words}</span>
+                        {" "}WORDS
+                      </span>
+                    </div>
+                    <div className="w-px h-3 bg-zinc-800" />
+                    <div className="flex items-center gap-1">
+                      <span>
+                        ~<span className="text-zinc-300 tabular-nums">
+                          {stat.turns > 0 ? Math.round(stat.words / stat.turns) : 0}
+                        </span>
+                        {" "}W/TURN
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Session metadata ── */}
+          <div className="flex items-center justify-between text-[10px] font-mono text-zinc-600 pt-1 border-t border-zinc-800">
+            <span>TURNS: <span className="text-zinc-400 tabular-nums">{transcript.length}</span></span>
+            <span>SPEAKERS: <span className="text-zinc-400 tabular-nums">{talkTimeStats.length}</span></span>
+            <span>LIVE UPDATE: <span className="text-emerald-500">ON</span></span>
+          </div>
+        </div>
+      )}
+    </InstrumentPanel>
+  );
+
+  // ────────────────────────────────────────────────────────────
   //  Component: Meeting Summarizer Panel
   // ────────────────────────────────────────────────────────────
 
@@ -1687,6 +1872,7 @@ export default function HarmonicDashboard() {
           </div>
           {/* Secondary Focus: 40% Screen Weight */}
           <div className="lg:col-span-5 space-y-4">
+            {cardAnalytics}
             {cardActions}
             {cardSummary}
             {cardHindi}
