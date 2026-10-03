@@ -61,6 +61,8 @@ import {
   Lightbulb,
   BarChart2,
   Mic2,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 // ────────────────────────────────────────────────────────────
@@ -782,6 +784,14 @@ export default function HarmonicDashboard() {
   const [meetingSummary, setMeetingSummary] = useState<MeetingSummary | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
 
+  // Action Matrix: manual add form + filter tab
+  const [actionFilter, setActionFilter] = useState<"all" | "pending" | "done">("all");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [manualTask, setManualTask] = useState("");
+  const [manualAssignee, setManualAssignee] = useState("Team");
+  const [manualPriority, setManualPriority] = useState<"High" | "Medium" | "Low">("Medium");
+  const [manualDue, setManualDue] = useState("");
+
   // ── Live Talk-Time Analytics (derived, not stored state) ──
   const talkTimeStats = useMemo<TalkTimeStat[]>(() => {
     if (transcript.length === 0) return [];
@@ -1200,6 +1210,28 @@ export default function HarmonicDashboard() {
     );
   };
 
+  const deleteAction = (id: string) => {
+    setActions((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const addManualTask = useCallback(() => {
+    if (!manualTask.trim()) return;
+    setActions((prev) => [
+      {
+        id: uid(),
+        task: manualTask.trim(),
+        assignee: manualAssignee,
+        priority: manualPriority,
+        due: manualDue.trim() || "TBD",
+        done: false,
+      },
+      ...prev,
+    ]);
+    setManualTask("");
+    setManualDue("");
+    setShowAddForm(false);
+  }, [manualTask, manualAssignee, manualPriority, manualDue]);
+
   // ── Meeting Summarizer ────────────────────────────────────────
   const generateSummary = useCallback(async () => {
     if (transcript.length === 0 || isSummarizing) return;
@@ -1404,81 +1436,279 @@ export default function HarmonicDashboard() {
   //  Component: Cognitive Layer / Action Matrix
   // ────────────────────────────────────────────────────────────
 
+  const QUICK_ADD_TEMPLATES = [
+    { task: "Share meeting notes with team",   assignee: "You",    priority: "Medium" as const, due: "TBD" },
+    { task: "Follow up on blockers before EOD", assignee: "You",    priority: "High"   as const, due: "Today" },
+    { task: "Review and approve open PRs",       assignee: "Rahul",  priority: "Medium" as const, due: "TBD" },
+  ];
+
+  const filteredActions = actions.filter((a) => {
+    if (actionFilter === "pending") return !a.done;
+    if (actionFilter === "done")    return a.done;
+    return true;
+  });
+
+  const pendingCount = actions.filter((a) => !a.done).length;
+  const doneCount    = actions.filter((a) =>  a.done).length;
+
   const cardActions = (
     <InstrumentPanel
       id="panel-action-items"
-      title="Action Matrix // ADHD Focus"
+      title="Action Matrix // Follow-Up Tasks"
       icon={Brain}
       badge={
-        <span className="font-mono text-[10px] text-amber-400 bg-amber-950/60 border border-amber-800/80 px-1.5 py-0.5 rounded">
-          {actions.filter((a) => !a.done).length} PENDING
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-[10px] text-amber-400 bg-amber-950/60 border border-amber-800/80 px-1.5 py-0.5 rounded">
+            {pendingCount} PENDING
+          </span>
+          {doneCount > 0 && (
+            <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/50 border border-emerald-800/80 px-1.5 py-0.5 rounded">
+              {doneCount} DONE
+            </span>
+          )}
+        </div>
       }
     >
-      <div className="space-y-2 h-64 sm:h-72 overflow-y-auto pr-1 custom-scrollbar">
-        {actions.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-6">
-            <CheckCircle2 className="w-5 h-5 text-zinc-600" />
-            <span>ACTION REGISTER EMPTY. TASKS AUTO-EXTRACT FROM SPEECH.</span>
+      <div className="space-y-2.5">
+
+        {/* ── Filter tabs ── */}
+        <div className="flex gap-1 text-[10px] font-mono" role="tablist">
+          {(["all", "pending", "done"] as const).map((tab) => (
+            <button
+              key={tab}
+              id={`action-filter-${tab}`}
+              role="tab"
+              aria-selected={actionFilter === tab}
+              onClick={() => setActionFilter(tab)}
+              className={`flex-1 py-1 rounded border uppercase tracking-wider transition-colors ${
+                actionFilter === tab
+                  ? "bg-zinc-800 border-zinc-600 text-zinc-100"
+                  : "bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+              }`}
+            >
+              {tab === "all" ? `All (${actions.length})` : tab === "pending" ? `Pending (${pendingCount})` : `Done (${doneCount})`}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Task list ── */}
+        <div className="space-y-1.5 h-56 sm:h-64 overflow-y-auto pr-1 custom-scrollbar">
+          {filteredActions.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-xs font-mono gap-1.5 border border-dashed border-zinc-800 rounded p-6">
+              <CheckCircle2 className="w-5 h-5 text-zinc-600" />
+              <span>
+                {actionFilter === "done" ? "NO COMPLETED TASKS YET." : actionFilter === "pending" ? "ALL TASKS RESOLVED!" : "ACTION REGISTER EMPTY. TASKS AUTO-EXTRACT FROM SPEECH."}
+              </span>
+            </div>
+          )}
+
+          {filteredActions.map((action) => {
+            // Colour assignee badge by matching speaker roster
+            const assigneeStyle = getSpeakerStyle(action.assignee);
+            const assigneeHex   = getSpeakerHex(action.assignee);
+            return (
+              <div
+                key={action.id}
+                id={`action-item-${action.id}`}
+                className={`flex gap-0 rounded overflow-hidden border animate-fade-in-up transition-all ${
+                  action.done
+                    ? "border-zinc-800/50 bg-zinc-950/40 opacity-60"
+                    : "border-zinc-700/70 bg-zinc-950 hover:border-zinc-500"
+                }`}
+              >
+                {/* Assignee colour accent bar */}
+                <div
+                  className={`w-1 shrink-0 ${assigneeStyle.accent} opacity-70`}
+                />
+
+                <div className="flex-1 p-2.5 min-w-0">
+                  {/* Task text + checkbox */}
+                  <div className="flex items-start gap-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleAction(action.id)}
+                      className={`w-4 h-4 rounded-none border mt-0.5 shrink-0 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 ${
+                        action.done
+                          ? "bg-emerald-950 border-emerald-700 text-emerald-400"
+                          : "border-zinc-600 bg-zinc-900 text-transparent hover:border-zinc-400"
+                      }`}
+                      aria-label={action.done ? "Mark as pending" : "Mark as done"}
+                      aria-pressed={action.done}
+                    >
+                      {action.done && <Check className="w-3 h-3 stroke-[3]" />}
+                    </button>
+
+                    <p className={`flex-1 font-sans text-xs leading-snug ${
+                      action.done ? "line-through text-zinc-500" : "text-zinc-200"
+                    }`}>
+                      {bionicMode && !action.done ? <BionicText text={action.task} /> : action.task}
+                    </p>
+
+                    {/* Delete button */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); deleteAction(action.id); }}
+                      className="shrink-0 p-0.5 text-zinc-600 hover:text-red-400 transition-colors rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
+                      aria-label="Delete action item"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Metadata chips */}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5 text-[10px] font-mono">
+                    {/* Assignee badge — speaker-coloured */}
+                    <span
+                      className={`px-1.5 py-0.5 rounded border font-bold uppercase ${
+                        SPEAKER_STYLES[action.assignee]
+                          ? assigneeStyle.tag
+                          : "border-zinc-700 bg-zinc-800 text-zinc-300"
+                      }`}
+                      style={SPEAKER_STYLES[action.assignee] ? undefined : { color: assigneeHex }}
+                    >
+                      @{action.assignee}
+                    </span>
+
+                    {/* Priority */}
+                    <span className={`px-1.5 py-0.5 rounded border ${PRIORITY_TAGS[action.priority]}`}>
+                      [{action.priority.toUpperCase()}]
+                    </span>
+
+                    {/* Due */}
+                    <span className="text-zinc-500 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {action.due}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Quick-add templates ── */}
+        {!showAddForm && (
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Quick Add</div>
+            <div className="space-y-1">
+              {QUICK_ADD_TEMPLATES.map((tpl, i) => (
+                <button
+                  key={i}
+                  id={`quick-add-tpl-${i}`}
+                  onClick={() => {
+                    setActions((prev) => [{
+                      id: uid(),
+                      task: tpl.task,
+                      assignee: tpl.assignee,
+                      priority: tpl.priority,
+                      due: tpl.due,
+                      done: false,
+                    }, ...prev]);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded border border-zinc-800 bg-zinc-950/80 hover:bg-zinc-900 hover:border-zinc-700 text-[11px] font-mono text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2 instrument-btn"
+                >
+                  <Plus className="w-3 h-3 text-zinc-600 shrink-0" />
+                  <span className="truncate">{tpl.task}</span>
+                  <span className={`ml-auto shrink-0 px-1 py-0.5 rounded border text-[9px] ${
+                    getSpeakerStyle(tpl.assignee).tag
+                  }`}>{tpl.assignee}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        {actions.map((action) => (
-          <div
-            key={action.id}
-            tabIndex={0}
-            role="button"
-            aria-pressed={action.done}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                toggleAction(action.id);
-              }
-            }}
-            onClick={() => toggleAction(action.id)}
-            id={`action-item-${action.id}`}
-            className={`p-2.5 rounded border transition-colors cursor-pointer select-none text-xs font-mono animate-fade-in-up ${
-              action.done
-                ? "bg-zinc-950/40 border-zinc-800 text-zinc-500 line-through"
-                : "bg-zinc-950 border-zinc-700/80 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-900"
-            }`}
-          >
-            <div className="flex items-start gap-2.5">
+        {/* ── Manual add form ── */}
+        {showAddForm ? (
+          <div className="border border-zinc-700 rounded bg-zinc-950/80 p-3 space-y-2 animate-fade-in-up">
+            <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+              <span>New Action Item</span>
               <button
-                type="button"
-                className={`w-4 h-4 rounded-none border mt-0.5 shrink-0 flex items-center justify-center transition-colors ${
-                  action.done
-                    ? "bg-emerald-950 border-emerald-700 text-emerald-400"
-                    : "border-zinc-600 bg-zinc-900 text-transparent"
-                }`}
-                aria-label="Toggle action completion"
+                onClick={() => setShowAddForm(false)}
+                className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                aria-label="Close add form"
               >
-                {action.done && <Check className="w-3 h-3 stroke-[3]" />}
+                <X className="w-3.5 h-3.5" />
               </button>
+            </div>
 
-              <div className="flex-1 min-w-0">
-                <p className="font-sans text-xs text-zinc-200 mb-1.5 leading-snug">
-                  {bionicMode && !action.done ? <BionicText text={action.task} /> : action.task}
-                </p>
+            <textarea
+              id="manual-task-input"
+              value={manualTask}
+              onChange={(e) => setManualTask(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addManualTask(); } }}
+              placeholder="Describe the action item..."
+              className="w-full bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 text-xs font-sans text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 resize-none transition-colors"
+              rows={2}
+              autoFocus
+            />
 
-                <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono">
-                  <span className="px-1.5 py-0.2 rounded border border-zinc-700 bg-zinc-800 text-zinc-300">
-                    @{action.assignee}
-                  </span>
-                  <span
-                    className={`px-1.5 py-0.2 rounded border ${PRIORITY_TAGS[action.priority]}`}
-                  >
-                    [{action.priority.toUpperCase()}]
-                  </span>
-                  <span className="text-zinc-500 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {action.due}
-                  </span>
-                </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {/* Assignee */}
+              <div>
+                <label className="block text-[10px] font-mono text-zinc-500 mb-0.5">ASSIGNEE</label>
+                <select
+                  id="manual-assignee-select"
+                  value={manualAssignee}
+                  onChange={(e) => setManualAssignee(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-[11px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-500 transition-colors"
+                >
+                  {SPEAKER_ROSTER.map((sp) => (
+                    <option key={sp.name} value={sp.name}>{sp.name}</option>
+                  ))}
+                  <option value="Team">Team</option>
+                </select>
+              </div>
+
+              {/* Priority */}
+              <div>
+                <label className="block text-[10px] font-mono text-zinc-500 mb-0.5">PRIORITY</label>
+                <select
+                  id="manual-priority-select"
+                  value={manualPriority}
+                  onChange={(e) => setManualPriority(e.target.value as "High" | "Medium" | "Low")}
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-[11px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-500 transition-colors"
+                >
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+
+              {/* Due */}
+              <div>
+                <label className="block text-[10px] font-mono text-zinc-500 mb-0.5">DUE</label>
+                <input
+                  id="manual-due-input"
+                  type="text"
+                  value={manualDue}
+                  onChange={(e) => setManualDue(e.target.value)}
+                  placeholder="e.g. Mon 5PM"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-[11px] font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                />
               </div>
             </div>
+
+            <button
+              id="manual-task-submit-btn"
+              onClick={addManualTask}
+              disabled={!manualTask.trim()}
+              className="w-full py-1.5 rounded bg-zinc-100 hover:bg-white text-zinc-950 font-mono text-xs font-semibold uppercase tracking-wider instrument-btn transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Task
+            </button>
           </div>
-        ))}
+        ) : (
+          <button
+            id="open-add-task-form-btn"
+            onClick={() => setShowAddForm(true)}
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded border border-dashed border-zinc-700 bg-zinc-950/60 hover:bg-zinc-900 hover:border-zinc-500 text-zinc-500 hover:text-zinc-300 font-mono text-xs uppercase tracking-wider instrument-btn transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Custom Task
+          </button>
+        )}
       </div>
     </InstrumentPanel>
   );
