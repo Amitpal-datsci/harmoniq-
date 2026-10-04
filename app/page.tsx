@@ -26,6 +26,7 @@ type WindowWithSpeech = typeof globalThis & {
 };
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import Link from "next/link";
 import {
   Mic,
   MicOff,
@@ -2609,7 +2610,23 @@ export default function HarmonicDashboard({
             {/* Workstation Footer Chassis */}
             <footer className="border-t border-zinc-800 mt-8 py-4 bg-zinc-950">
               <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-500">
-                <span>HARMONIC WORKSTATION // TACTILE ACCESSIBILITY INSTRUMENT</span>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span>HARMONIC WORKSTATION // TACTILE ACCESSIBILITY INSTRUMENT</span>
+                  <span>•</span>
+                  <Link
+                    href="/privacy"
+                    className="text-zinc-400 hover:text-purple-300 transition-colors uppercase"
+                  >
+                    Privacy
+                  </Link>
+                  <span>•</span>
+                  <Link
+                    href="/terms"
+                    className="text-zinc-400 hover:text-cyan-300 transition-colors uppercase"
+                  >
+                    Terms
+                  </Link>
+                </div>
                 <span>SPEC: ZERO_PERSISTENCE • GEMINI_1.5_FLASH • WCAG_AAA</span>
               </div>
             </footer>

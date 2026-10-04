@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { checkRateLimit, getClientIp, getRateLimitHeaders } from "@/lib/rate-limit";
 
 // ── Shared types ──────────────────────────────────────────────────────────────
 
@@ -152,6 +153,15 @@ ${transcriptBlock}`;
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest): Promise<Response> {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`summarize_${ip}`, { limit: 10, windowMs: 60 * 1000 });
+  if (!rl.success) {
+    return Response.json(
+      { error: "Too many summary generation requests. Please wait a moment before requesting another summary." },
+      { status: 429, headers: getRateLimitHeaders(rl) }
+    );
+  }
+
   let turns: TranscriptTurnInput[] = [];
 
   try {
