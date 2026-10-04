@@ -24,6 +24,8 @@ export interface HarmonizerResponse {
   simplifiedNotes: string[];
   jargon: JargonTerm[];
   summaryRecap: string;
+  workspaceId?: string;
+  channelId?: string;
 }
 
 // ── Local jargon dictionary ────────────────────────────────────
@@ -231,11 +233,15 @@ Rules:
 export async function POST(request: NextRequest): Promise<Response> {
   let rawText = "";
   let speaker = "Unknown";
+  let workspaceId: string | undefined = undefined;
+  let channelId: string | undefined = undefined;
 
   try {
     const body = await request.json();
     rawText = (body.rawText ?? "").toString().trim();
     speaker = (body.speaker ?? "Unknown").toString().trim();
+    workspaceId = body.workspaceId ? String(body.workspaceId) : undefined;
+    channelId = body.channelId ? String(body.channelId) : undefined;
   } catch {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -250,7 +256,11 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (apiKey) {
     try {
       const data = await callGemini(rawText, speaker, apiKey);
-      return Response.json(data);
+      return Response.json({
+        ...data,
+        ...(workspaceId ? { workspaceId } : {}),
+        ...(channelId ? { channelId } : {}),
+      });
     } catch (err) {
       console.warn("[Harmonic] Gemini call failed, using local fallback:", err);
     }
@@ -263,6 +273,8 @@ export async function POST(request: NextRequest): Promise<Response> {
     simplifiedNotes: simplifyLocally(rawText),
     jargon: detectJargonLocally(rawText),
     summaryRecap: generateRecapLocally(rawText),
+    ...(workspaceId ? { workspaceId } : {}),
+    ...(channelId ? { channelId } : {}),
   };
 
   return Response.json(fallback);

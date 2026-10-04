@@ -18,7 +18,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ session });
     }
 
+    const workspaceId = searchParams.get("workspaceId");
+    const channelId = searchParams.get("channelId");
+
+    const whereClause: { workspaceId?: string; channelId?: string } = {};
+    if (workspaceId) whereClause.workspaceId = workspaceId;
+    if (channelId) whereClause.channelId = channelId;
+
     const sessions = await prisma.session.findMany({
+      where: whereClause,
       take: 10,
       orderBy: { createdAt: "desc" },
       include: {
@@ -49,7 +57,35 @@ export async function POST(request: NextRequest) {
       notes = [],
       recaps = [],
       jargon = [],
+      workspaceId,
+      channelId,
     } = body;
+
+    // Resolve workspace and channel IDs if present
+    let validWorkspaceId: string | undefined = undefined;
+    let validChannelId: string | undefined = undefined;
+
+    if (workspaceId) {
+      try {
+        const ws = await prisma.workspace.findFirst({
+          where: { OR: [{ id: workspaceId }, { slug: workspaceId }] },
+        });
+        if (ws) {
+          validWorkspaceId = ws.id;
+          if (channelId) {
+            const chan = await prisma.channel.findFirst({
+              where: {
+                workspaceId: ws.id,
+                OR: [{ id: channelId }, { name: channelId }],
+              },
+            });
+            if (chan) validChannelId = chan.id;
+          }
+        }
+      } catch (wsLookupErr) {
+        console.warn("[POST /api/sessions] Workspace lookup bypassed:", wsLookupErr);
+      }
+    }
 
     // Check if session exists to update, or create a fresh one
     const existingSession = sessionId
@@ -64,6 +100,8 @@ export async function POST(request: NextRequest) {
           title,
           summaryRecaps: recaps,
           simplifiedNotes: notes,
+          ...(validWorkspaceId ? { workspaceId: validWorkspaceId } : {}),
+          ...(validChannelId ? { channelId: validChannelId } : {}),
           turns: {
             deleteMany: {},
             create: turns.map((t: { speaker: string; role: string; text: string; timestamp: string }) => ({
@@ -100,6 +138,8 @@ export async function POST(request: NextRequest) {
         title,
         summaryRecaps: recaps,
         simplifiedNotes: notes,
+        ...(validWorkspaceId ? { workspaceId: validWorkspaceId } : {}),
+        ...(validChannelId ? { channelId: validChannelId } : {}),
         turns: {
           create: turns.map((t: { speaker: string; role: string; text: string; timestamp: string }) => ({
             speaker: t.speaker,

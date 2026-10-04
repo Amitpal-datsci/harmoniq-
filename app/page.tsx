@@ -66,9 +66,12 @@ import {
   LogIn,
   LogOut,
   ShieldCheck,
+  Building,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { AuthModal } from "@/components/AuthModal";
+import { WorkspaceSidebar } from "@/components/WorkspaceSidebar";
+import { DEFAULT_WORKSPACES, WorkspaceItem, ChannelItem } from "@/lib/workspace";
 
 // ────────────────────────────────────────────────────────────
 //  Types
@@ -761,7 +764,36 @@ const TABS = [
 //  Main Workstation Dashboard
 // ────────────────────────────────────────────────────────────
 
-export default function HarmonicDashboard() {
+export default function HarmonicDashboard({
+  initialWorkspaceSlug,
+  initialChannelId,
+}: {
+  initialWorkspaceSlug?: string;
+  initialChannelId?: string;
+} = {}) {
+  // Multi-tenant Workspace & Channel State
+  const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>(DEFAULT_WORKSPACES);
+  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceItem>(() => {
+    if (initialWorkspaceSlug) {
+      const found = DEFAULT_WORKSPACES.find((w) => w.slug === initialWorkspaceSlug);
+      if (found) return found;
+    }
+    return DEFAULT_WORKSPACES[0];
+  });
+  const [activeChannel, setActiveChannel] = useState<ChannelItem>(() => {
+    const ws = initialWorkspaceSlug
+      ? DEFAULT_WORKSPACES.find((w) => w.slug === initialWorkspaceSlug) || DEFAULT_WORKSPACES[0]
+      : DEFAULT_WORKSPACES[0];
+    if (initialChannelId) {
+      const chan = ws.channels?.find(
+        (c) => c.id === initialChannelId || c.name === initialChannelId
+      );
+      if (chan) return chan;
+    }
+    return ws.channels?.[0] || DEFAULT_WORKSPACES[0].channels[0];
+  });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   const [activeTab, setActiveTab] = useState("all");
   const [isListening, setIsListening] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -839,6 +871,37 @@ export default function HarmonicDashboard() {
   const analyserRef       = useRef<AnalyserNode | null>(null);
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
 
+  // Fetch accessible workspaces on mount & rehydrate active scope
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/workspaces")
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.workspaces && data.workspaces.length > 0) {
+          setWorkspaces(data.workspaces);
+          if (initialWorkspaceSlug) {
+            const foundWs = data.workspaces.find(
+              (w: WorkspaceItem) => w.slug === initialWorkspaceSlug
+            );
+            if (foundWs) {
+              setActiveWorkspace(foundWs);
+              const foundChan = initialChannelId
+                ? foundWs.channels?.find(
+                    (c: ChannelItem) => c.id === initialChannelId || c.name === initialChannelId
+                  ) || foundWs.channels?.[0]
+                : foundWs.channels?.[0];
+              if (foundChan) setActiveChannel(foundChan);
+            }
+          }
+        }
+      })
+      .catch((err) => console.warn("[Workspaces] DB offline fallback active:", err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialWorkspaceSlug, initialChannelId]);
+
   // Sync state to PostgreSQL via /api/sessions
   const syncSessionToDb = useCallback(
     async (override?: {
@@ -863,7 +926,9 @@ export default function HarmonicDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sessionId: currentSessionId,
-            title: "Sprint Planning Call",
+            workspaceId: activeWorkspace.id,
+            channelId: activeChannel.id,
+            title: `${activeWorkspace.name} - #${activeChannel.name} Session`,
             turns: turnsPayload,
             actions: actionsPayload,
             notes: notesPayload,
@@ -886,14 +951,18 @@ export default function HarmonicDashboard() {
         setDbStatus("OFFLINE");
       }
     },
-    [currentSessionId, transcript, actions, notes, recaps, jargon]
+    [currentSessionId, transcript, actions, notes, recaps, jargon, activeWorkspace.id, activeWorkspace.name, activeChannel.id, activeChannel.name]
   );
 
-  // Rehydrate latest session on mount
+  // Rehydrate latest session for active workspace & channel
   useEffect(() => {
     async function loadLatestSession() {
       try {
-        const res = await fetch("/api/sessions");
+        const queryParams = new URLSearchParams();
+        if (activeWorkspace.id) queryParams.set("workspaceId", activeWorkspace.id);
+        if (activeChannel.id) queryParams.set("channelId", activeChannel.id);
+        const url = `/api/sessions?${queryParams.toString()}`;
+        const res = await fetch(url);
         if (!res.ok) return;
         const data = await res.json();
         if (data.sessions && data.sessions.length > 0) {
@@ -944,7 +1013,7 @@ export default function HarmonicDashboard() {
       }
     }
     loadLatestSession();
-  }, []);
+  }, [activeWorkspace.id, activeChannel.id]);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -982,7 +1051,12 @@ export default function HarmonicDashboard() {
             "Content-Type": "application/json",
             ...(apiKey ? { "x-gemini-key": apiKey } : {}),
           },
-          body: JSON.stringify({ rawText, speaker }),
+          body: JSON.stringify({
+            rawText,
+            speaker,
+            workspaceId: activeWorkspace.id,
+            channelId: activeChannel.id,
+          }),
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -2197,6 +2271,7 @@ export default function HarmonicDashboard() {
         <header className="border-b border-zinc-800 bg-zinc-950/95 sticky top-0 z-30">
           <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
             {/* Instrument Brand */}
+            {/* Instrument Brand & Scope Pill */}
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded bg-zinc-900 border border-zinc-700 flex items-center justify-center font-mono text-xs font-bold text-zinc-200">
                 H•Q
@@ -2214,6 +2289,20 @@ export default function HarmonicDashboard() {
                   TACTILE ACCESSIBILITY MIDDLEWARE
                 </p>
               </div>
+
+              {/* Multi-Tenant Scope Pill with Sidebar Toggle */}
+              <button
+                id="toggle-sidebar-header-btn"
+                onClick={() => setIsSidebarOpen((v) => !v)}
+                className="flex items-center gap-1.5 border border-purple-800/60 bg-purple-950/40 hover:bg-purple-900/60 px-2 py-1 rounded text-xs font-mono instrument-btn transition-colors cursor-pointer ml-1"
+                title="Toggle Workspace & Channel Sidebar"
+                aria-label="Toggle Workspace Sidebar"
+              >
+                <Building className="w-3.5 h-3.5 text-purple-400" />
+                <span className="font-bold text-purple-200">{activeWorkspace.name}</span>
+                <span className="text-zinc-600">/</span>
+                <span className="text-cyan-300 font-semibold">#{activeChannel.name}</span>
+              </button>
             </div>
 
             {/* Hardware Status Indicators */}
@@ -2456,42 +2545,76 @@ export default function HarmonicDashboard() {
           </div>
         </header>
 
-        {/* Workstation Main Rack */}
-        <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
-          {/* Executive Simplified Notes Banner */}
-          {notes.length > 0 && (
-            <div className="mb-4 p-3 rounded bg-zinc-900/90 border border-zinc-800 animate-fade-in-up">
-              <div className="flex items-center gap-2 mb-1.5 text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
-                <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
-                <span>Executive Simplified Notes // Takeaway Feed</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans text-zinc-300">
-                {notes.slice(-4).map((note, i) => (
-                  <div
-                    key={i}
-                    className="p-2 rounded bg-zinc-950/80 border border-zinc-800 flex items-start gap-2"
-                  >
-                    <span className="text-zinc-500 font-mono text-[10px] mt-0.5">
-                      0{i + 1}
-                    </span>
-                    <span>{note}</span>
+        {/* Workstation Main Rack with Workspace Navigation Sidebar */}
+        <div className="flex min-h-[calc(100vh-85px)]">
+          <WorkspaceSidebar
+            workspaces={workspaces}
+            activeWorkspace={activeWorkspace}
+            activeChannel={activeChannel}
+            isOpen={isSidebarOpen}
+            onToggle={() => setIsSidebarOpen((v) => !v)}
+            onSelectWorkspace={(ws) => {
+              setActiveWorkspace(ws);
+              if (ws.channels && ws.channels.length > 0) {
+                setActiveChannel(ws.channels[0]);
+              }
+            }}
+            onSelectChannel={(ch) => setActiveChannel(ch)}
+            onCreateChannel={(ch) => {
+              setActiveWorkspace((prev) => ({
+                ...prev,
+                channels: [...(prev.channels || []), ch],
+              }));
+              setActiveChannel(ch);
+            }}
+            onCreateWorkspace={(ws) => {
+              setWorkspaces((prev) => [...prev, ws]);
+              setActiveWorkspace(ws);
+              if (ws.channels && ws.channels.length > 0) {
+                setActiveChannel(ws.channels[0]);
+              }
+            }}
+          />
+
+          <div className="flex-1 min-w-0">
+            {/* Workstation Main Rack */}
+            <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
+              {/* Executive Simplified Notes Banner */}
+              {notes.length > 0 && (
+                <div className="mb-4 p-3 rounded bg-zinc-900/90 border border-zinc-800 animate-fade-in-up">
+                  <div className="flex items-center gap-2 mb-1.5 text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+                    <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Executive Simplified Notes // Takeaway Feed</span>
                   </div>
-                ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans text-zinc-300">
+                    {notes.slice(-4).map((note, i) => (
+                      <div
+                        key={i}
+                        className="p-2 rounded bg-zinc-950/80 border border-zinc-800 flex items-start gap-2"
+                      >
+                        <span className="text-zinc-500 font-mono text-[10px] mt-0.5">
+                          0{i + 1}
+                        </span>
+                        <span>{note}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Dynamic Workstation Layout */}
+              {renderWorkstationLayout()}
+            </main>
+
+            {/* Workstation Footer Chassis */}
+            <footer className="border-t border-zinc-800 mt-8 py-4 bg-zinc-950">
+              <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-500">
+                <span>HARMONIC WORKSTATION // TACTILE ACCESSIBILITY INSTRUMENT</span>
+                <span>SPEC: ZERO_PERSISTENCE • GEMINI_1.5_FLASH • WCAG_AAA</span>
               </div>
-            </div>
-          )}
-
-          {/* Dynamic Workstation Layout */}
-          {renderWorkstationLayout()}
-        </main>
-
-        {/* Workstation Footer Chassis */}
-        <footer className="border-t border-zinc-800 mt-8 py-4 bg-zinc-950">
-          <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-500">
-            <span>HARMONIC WORKSTATION // TACTILE ACCESSIBILITY INSTRUMENT</span>
-            <span>SPEC: ZERO_PERSISTENCE • GEMINI_1.5_FLASH • WCAG_AAA</span>
+            </footer>
           </div>
-        </footer>
+        </div>
       </div>
     </>
   );
