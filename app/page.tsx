@@ -63,7 +63,12 @@ import {
   Mic2,
   Plus,
   Trash2,
+  LogIn,
+  LogOut,
+  ShieldCheck,
 } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { AuthModal } from "@/components/AuthModal";
 
 // ────────────────────────────────────────────────────────────
 //  Types
@@ -761,6 +766,8 @@ export default function HarmonicDashboard() {
   const [isListening, setIsListening] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { data: session, status: authStatus } = useSession();
   const [apiKey, setApiKey] = useState("");
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [actions, setActions] = useState<ActionItem[]>([]);
@@ -2172,6 +2179,12 @@ export default function HarmonicDashboard() {
         onSave={setApiKey}
       />
 
+      <AuthModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        session={session}
+      />
+
       <CatchMeUpDrawer
         open={showCatchUp}
         onClose={() => setShowCatchUp(false)}
@@ -2372,6 +2385,55 @@ export default function HarmonicDashboard() {
               >
                 <Settings className="w-3.5 h-3.5" />
               </button>
+
+              {/* Dynamic User & Auth Status */}
+              {authStatus === "loading" ? (
+                <div className="flex items-center gap-1.5 border border-zinc-800 bg-zinc-900 px-2 py-1 rounded text-xs font-mono text-zinc-500">
+                  <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                  <span className="text-[10px]">AUTH...</span>
+                </div>
+              ) : session?.user ? (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    id="user-profile-btn"
+                    onClick={() => setShowAuthModal(true)}
+                    className="flex items-center gap-1.5 border border-purple-800/70 bg-purple-950/40 hover:bg-purple-900/50 px-2 py-1 rounded text-xs font-mono instrument-btn transition-colors cursor-pointer"
+                    title={`Signed in as ${session.user.email}. Click to view details.`}
+                    aria-label="View user profile"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-purple-900 border border-purple-400 flex items-center justify-center text-[9px] font-bold text-purple-200">
+                      {session.user.name ? session.user.name.slice(0, 1).toUpperCase() : "U"}
+                    </div>
+                    <span className="text-purple-200 font-medium max-w-[90px] sm:max-w-[120px] truncate">
+                      {session.user.name || session.user.email?.split("@")[0]}
+                    </span>
+                    <span className="text-[9px] font-mono text-purple-400/90 border border-purple-800/60 px-1 rounded bg-purple-950/60 hidden md:inline">
+                      {session.user.email?.startsWith("admin") ? "ADMIN" : "MEMBER"}
+                    </span>
+                  </button>
+
+                  <button
+                    id="header-signout-btn"
+                    onClick={() => signOut({ redirect: false })}
+                    className="p-1.5 rounded border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-red-300 instrument-btn transition-colors cursor-pointer"
+                    title="Sign Out"
+                    aria-label="Sign Out"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  id="header-signin-btn"
+                  onClick={() => setShowAuthModal(true)}
+                  className="flex items-center gap-1.5 border border-purple-800/80 bg-purple-950/50 hover:bg-purple-900/60 text-purple-200 px-2.5 py-1 rounded text-xs font-mono uppercase tracking-wider instrument-btn transition-colors cursor-pointer"
+                  title="Sign In with Email / Password or Seed Admin"
+                  aria-label="Sign In"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-purple-400" />
+                  <span>SIGN IN</span>
+                </button>
+              )}
             </div>
           </div>
 
